@@ -31,6 +31,8 @@ def create_app(config_name=None, **overrides):
     db.init_app(app)
     migrate.init_app(app, db, directory=MIGRATIONS_DIR, render_as_batch=True)
 
+    from ledgerline import models  # noqa: F401  (register mappers)
+
     @app.route("/health")
     def health():
         return jsonify({"status": "ok", "version": __version__})

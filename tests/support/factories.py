@@ -6,7 +6,7 @@ import itertools
 
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import ApiKey, Customer, Tenant
+from ledgerline.models import ApiKey, Customer, Price, Product, Tenant
 
 _counter = itertools.count(1)
 
@@ -40,6 +40,41 @@ def customer(
         name="Customer",
         billing_address=billing_address,
         currency=currency,
+    )
+    db.session.add(obj)
+    db.session.flush()
+    return obj
+
+
+def product(tenant, name=None):
+    obj = Product(tenant_id=tenant.id, name=name or "Product %d" % next(_counter), active=True)
+    db.session.add(obj)
+    db.session.flush()
+    return obj
+
+
+def price(
+    tenant,
+    unit_amount=1000,
+    currency="eur",
+    interval="month",
+    interval_count=1,
+    billing_scheme="per_unit",
+    package_size=None,
+    product_obj=None,
+    nickname=None,
+):
+    obj = Price(
+        tenant_id=tenant.id,
+        product=product_obj or product(tenant),
+        currency=currency,
+        unit_amount=unit_amount,
+        interval=interval,
+        interval_count=interval_count,
+        billing_scheme=billing_scheme,
+        package_size=package_size,
+        nickname=nickname,
+        active=True,
     )
     db.session.add(obj)
     db.session.flush()

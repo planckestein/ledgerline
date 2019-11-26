@@ -34,6 +34,9 @@ class Customer(PublicIdMixin, TimestampMixin, db.Model):
     metadata_ = db.Column("metadata", JSONText, nullable=True)
 
     tenant = db.relationship("Tenant")
+    payment_methods = db.relationship(
+        "PaymentMethod", back_populates="customer", order_by="PaymentMethod.id"
+    )
 
     @property
     def address(self):
@@ -46,6 +49,13 @@ class Customer(PublicIdMixin, TimestampMixin, db.Model):
     @property
     def billing_state(self):
         return self.address["state"]
+
+    @property
+    def default_payment_method(self):
+        for method in self.payment_methods:
+            if method.is_default and method.detached_at is None:
+                return method
+        return None
 
     def __repr__(self):
         return "<Customer %s>" % self.public_id

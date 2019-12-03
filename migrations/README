@@ -1,0 +1,12 @@
+Single-database configuration for Flask (Flask-Migrate / Alembic).
+
+    flask db upgrade             # apply all migrations
+    flask db migrate -m "..."    # autogenerate a new revision (review it!)
+    flask db downgrade -1        # roll back one revision
+
+Every revision must:
+
+* run on both PostgreSQL and SQLite (use op.batch_alter_table for ALTERs);
+* name every constraint explicitly (see NAMING_CONVENTION in ledgerline/extensions.py);
+* provide a working downgrade();
+* leave the database matching the models (tests/migrations/test_migrations.py checks this).

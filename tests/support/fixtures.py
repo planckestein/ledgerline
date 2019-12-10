@@ -1,5 +1,6 @@
 """Pytest fixtures shared by every test suite."""
 import datetime
+import json as jsonlib
 
 import pytest
 
@@ -47,3 +48,44 @@ def other_tenant(db):
     tenant = factories.tenant(name="Globex Ltd", home_country="GB", default_currency="gbp")
     db.session.commit()
     return tenant
+
+
+class ApiClient:
+    """Thin wrapper around Flask's test client that authenticates as one tenant."""
+
+    def __init__(self, client, secret):
+        self.client = client
+        self.secret = secret
+
+    def _headers(self, idempotency_key=None, headers=None):
+        result = {"Authorization": "Bearer %s" % self.secret}
+        if idempotency_key is not None:
+            result["Idempotency-Key"] = idempotency_key
+        result.update(headers or {})
+        return result
+
+    def get(self, path, headers=None, **params):
+        return self.client.get(path, query_string=params, headers=self._headers(headers=headers))
+
+    def post(self, path, json=None, idempotency_key=None, headers=None):
+        body = jsonlib.dumps(json) if json is not None else ""
+        return self.client.post(
+            path,
+            data=body,
+            content_type="application/json",
+            headers=self._headers(idempotency_key, headers),
+        )
+
+
+@pytest.fixture
+def api(app, tenant):
+    secret = factories.api_key(tenant)
+    _db.session.commit()
+    return ApiClient(app.test_client(), secret)
+
+
+@pytest.fixture
+def other_api(app, other_tenant):
+    secret = factories.api_key(other_tenant)
+    _db.session.commit()
+    return ApiClient(app.test_client(), secret)

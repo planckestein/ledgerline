@@ -32,6 +32,11 @@ def create_app(config_name=None, **overrides):
     migrate.init_app(app, db, directory=MIGRATIONS_DIR, render_as_batch=True)
 
     from ledgerline import models  # noqa: F401  (register mappers)
+    from ledgerline.api import register_api
+    from ledgerline.cli import register_cli
+
+    register_api(app)
+    register_cli(app)
 
     @app.route("/health")
     def health():

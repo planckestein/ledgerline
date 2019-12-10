@@ -16,6 +16,9 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
 
+    LEDGERLINE_PAGE_SIZE_DEFAULT = 10
+    LEDGERLINE_PAGE_SIZE_MAX = 100
+
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True

@@ -95,8 +95,9 @@ class Money:
     def allocate(self, weights: Sequence[int]) -> List["Money"]:
         """Split the amount proportionally to ``weights`` without losing a minor unit.
 
-        Every share is rounded down and the leftover minor units go to the first
-        shares, one each. The result always sums to
+        Uses the largest-remainder method: every share is first rounded down,
+        then the leftover minor units go to the shares with the largest
+        remainders. Ties go to the earliest share. The result always sums to
         ``self``.
         """
         weights = list(weights)
@@ -111,10 +112,13 @@ class Money:
         sign = -1 if self.amount < 0 else 1
         magnitude = abs(self.amount)
         shares = []
-        for weight in weights:
-            shares.append(magnitude * weight // total_weight)
+        remainders = []
+        for index, weight in enumerate(weights):
+            share, remainder = divmod(magnitude * weight, total_weight)
+            shares.append(share)
+            remainders.append((remainder, index))
         leftover = magnitude - sum(shares)
-        for index in range(leftover):
+        for _, index in sorted(remainders, key=lambda item: (-item[0], item[1]))[:leftover]:
             shares[index] += 1
         return [Money(sign * share, self.currency) for share in shares]
 

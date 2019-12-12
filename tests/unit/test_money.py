@@ -106,6 +106,11 @@ class TestAllocate:
         assert sum(share.amount for share in shares) == 1000
         assert [share.amount for share in shares] == [100, 200, 300, 400]
 
+    def test_largest_remainder_wins(self):
+        # 10 * 3/7 = 4.28, 10 * 4/7 = 5.71 -> second share gets the leftover unit.
+        shares = Money(10, "usd").allocate([3, 4])
+        assert [share.amount for share in shares] == [4, 6]
+
     def test_negative_amounts(self):
         shares = Money(-100, "usd").allocate([1, 1, 1])
         assert [share.amount for share in shares] == [-34, -33, -33]

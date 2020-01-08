@@ -40,3 +40,12 @@ class NotFoundError(InvalidRequestError):
 class AuthenticationError(LedgerlineError):
     status_code = 401
     error_type = "authentication_error"
+
+
+class InvalidStateTransition(InvalidRequestError):
+    status_code = 409
+    default_code = "invalid_state_transition"
+
+
+class InvoiceError(InvalidRequestError):
+    default_code = "invoice_error"

@@ -4,11 +4,12 @@ from flask import g, jsonify, request
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
-from ledgerline.api.schemas import CustomerSchema
-from ledgerline.api.serializers import serialize_customer
+from ledgerline.api.schemas import CustomerSchema, PaymentMethodSchema
+from ledgerline.api.serializers import serialize_customer, serialize_payment_method
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import Customer
+from ledgerline.models import Customer, PaymentMethod
+from ledgerline.payments import service as payment_service
 
 
 def _apply_fields(customer, data):
@@ -52,3 +53,23 @@ def update_customer(customer_id):
     _apply_fields(customer, data)
     db.session.commit()
     return jsonify(serialize_customer(customer))
+
+
+@api_bp.route("/customers/<customer_id>/payment_methods", methods=["POST"])
+def attach_payment_method(customer_id):
+    customer = get_or_404(Customer, customer_id)
+    data = load(PaymentMethodSchema())
+    method = payment_service.attach_payment_method(
+        customer, data["token"], set_default=data["set_default"]
+    )
+    db.session.commit()
+    return jsonify(serialize_payment_method(method)), 201
+
+
+@api_bp.route("/customers/<customer_id>/payment_methods", methods=["GET"])
+def list_payment_methods(customer_id):
+    customer = get_or_404(Customer, customer_id)
+    query = scoped(PaymentMethod).filter(
+        PaymentMethod.customer_id == customer.id, PaymentMethod.detached_at.is_(None)
+    )
+    return jsonify(paginate(query, PaymentMethod, serialize_payment_method))

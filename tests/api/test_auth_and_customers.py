@@ -91,6 +91,22 @@ class TestCustomers:
         data = api.get("/v1/customers", email="b@example.com").get_json()["data"]
         assert [c["email"] for c in data] == ["b@example.com"]
 
+    def test_payment_methods(self, api):
+        customer = api.post("/v1/customers", json={}).get_json()
+        response = api.post(
+            "/v1/customers/%s/payment_methods" % customer["id"], json={"token": "tok_visa"}
+        )
+        assert response.status_code == 201
+        method = response.get_json()
+        assert method["card"] == {"brand": "visa", "last4": "4242"}
+        assert method["is_default"] is True
+        fetched = api.get("/v1/customers/%s" % customer["id"]).get_json()
+        assert fetched["default_payment_method"] == method["id"]
+
+        bad = api.post("/v1/customers/%s/payment_methods" % customer["id"], json={"token": "x"})
+        assert bad.status_code == 400
+        assert bad.get_json()["error"]["code"] == "invalid_token"
+
     def test_unknown_route_is_json(self, api):
         response = api.get("/v1/nope")
         assert response.status_code == 404

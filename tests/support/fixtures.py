@@ -37,6 +37,11 @@ def db(app):
 
 
 @pytest.fixture
+def gateway(app):
+    return app.extensions["ledgerline.gateway"]
+
+
+@pytest.fixture
 def tenant(db):
     tenant = factories.tenant()
     db.session.commit()

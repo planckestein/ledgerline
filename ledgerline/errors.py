@@ -49,3 +49,8 @@ class InvalidStateTransition(InvalidRequestError):
 
 class InvoiceError(InvalidRequestError):
     default_code = "invoice_error"
+
+
+class CardError(LedgerlineError):
+    status_code = 402
+    error_type = "card_error"

@@ -7,6 +7,7 @@ import itertools
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
 from ledgerline.models import ApiKey, Customer, InvoiceItem, Price, Product, Tenant
+from ledgerline.payments import service as payment_service
 
 _counter = itertools.count(1)
 
@@ -29,6 +30,7 @@ def customer(
     email=None,
     country="DE",
     state=None,
+    token="tok_visa",
     currency=None,
     billing_address=None,
 ):
@@ -43,6 +45,9 @@ def customer(
     )
     db.session.add(obj)
     db.session.flush()
+    if token:
+        payment_service.attach_payment_method(obj, token)
+        db.session.flush()
     return obj
 
 

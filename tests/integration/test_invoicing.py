@@ -27,6 +27,11 @@ class TestLifecycle:
         assert invoice.status == "open"
         assert invoice.number == "%s-0001" % customer.invoice_prefix
 
+        invoicing.pay_invoice(invoice)
+        assert invoice.status == "paid"
+        assert invoice.amount_paid == 4000
+        assert invoice.amount_due == 0
+
     def test_numbers_are_sequential_per_customer(self, tenant):
         first = factories.customer(tenant)
         second = factories.customer(tenant)
@@ -45,6 +50,12 @@ class TestLifecycle:
         invoicing.finalize_invoice(invoice)
         with pytest.raises(InvalidStateTransition):
             invoicing.finalize_invoice(invoice)
+
+    def test_zero_total_is_paid_on_finalize(self, tenant, gateway):
+        invoice = manual_invoice(factories.customer(tenant), 500, -500)
+        invoicing.finalize_invoice(invoice)
+        assert invoice.status == "paid"
+        assert gateway.charges == []
 
     def test_void_open_invoice(self, tenant):
         invoice = manual_invoice(factories.customer(tenant), 1000)
@@ -65,6 +76,21 @@ class TestLifecycle:
         invoicing.pay_invoice(invoice, paid_out_of_band=True)
         with pytest.raises(InvalidStateTransition):
             invoicing.void_invoice(invoice)
+
+    def test_uncollectible_then_recovered(self, tenant):
+        invoice = manual_invoice(factories.customer(tenant), 1000)
+        invoicing.finalize_invoice(invoice)
+        invoicing.mark_uncollectible(invoice)
+
+        invoicing.pay_invoice(invoice)
+        assert invoice.status == "paid"
+
+    def test_paid_out_of_band_does_not_charge(self, tenant, gateway):
+        invoice = manual_invoice(factories.customer(tenant), 1000)
+        invoicing.finalize_invoice(invoice)
+        invoicing.pay_invoice(invoice, paid_out_of_band=True)
+        assert invoice.status == "paid"
+        assert gateway.charges == []
 
     def test_send_invoice_due_date(self, tenant):
         invoice = manual_invoice(

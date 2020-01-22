@@ -34,7 +34,9 @@ def create_app(config_name=None, **overrides):
     from ledgerline import models  # noqa: F401  (register mappers)
     from ledgerline.api import register_api
     from ledgerline.cli import register_cli
+    from ledgerline.payments.gateway import init_gateway
 
+    init_gateway(app)
     register_api(app)
     register_cli(app)
 

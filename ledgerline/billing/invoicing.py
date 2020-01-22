@@ -106,6 +106,11 @@ def pay_invoice(invoice, paid_out_of_band=False):
     if paid_out_of_band:
         return mark_paid(invoice, amount=invoice.amount_due, out_of_band=True)
 
+    from ledgerline.payments import service as payment_service
+
+    attempt = payment_service.collect_invoice(invoice)
+    return attempt
+
 
 def void_invoice(invoice):
     was_finalized = invoice.status != "draft"

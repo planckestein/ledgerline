@@ -16,6 +16,9 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
 
+    # Name of the payment gateway adapter registered in ledgerline.payments.gateway.
+    LEDGERLINE_PAYMENT_GATEWAY = os.environ.get("LEDGERLINE_PAYMENT_GATEWAY", "fake")
+
     LEDGERLINE_PAGE_SIZE_DEFAULT = 10
     LEDGERLINE_PAGE_SIZE_MAX = 100
 

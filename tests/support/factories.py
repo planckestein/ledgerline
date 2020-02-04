@@ -4,6 +4,7 @@ They flush but never commit; tests decide when a transaction ends.
 """
 import itertools
 
+from ledgerline.billing import subscriptions
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
 from ledgerline.models import ApiKey, Customer, InvoiceItem, Price, Product, Tenant
@@ -84,6 +85,16 @@ def price(
     db.session.add(obj)
     db.session.flush()
     return obj
+
+
+def subscribe(customer, items, **kwargs):
+    """``items`` is a Price, or a list of Price / (Price, quantity)."""
+    if isinstance(items, (Price, tuple)):
+        items = [items]
+    normalized = [item if isinstance(item, tuple) else (item, 1) for item in items]
+    sub = subscriptions.create_subscription(customer, normalized, **kwargs)
+    db.session.flush()
+    return sub
 
 
 def invoice_item(customer, amount, description="One-off charge", currency=None, subscription=None):

@@ -7,6 +7,7 @@ from marshmallow import Schema, ValidationError, fields, validate, validates_sch
 
 from ledgerline.billing import periods
 from ledgerline.billing.pricing import BILLING_SCHEMES
+from ledgerline.billing.subscriptions import COLLECTION_METHODS, PRORATION_BEHAVIORS
 from ledgerline.currency import CURRENCY_EXPONENTS
 
 
@@ -82,3 +83,37 @@ class PriceSchema(Schema):
 class PriceUpdateSchema(Schema):
     nickname = fields.Str(allow_none=True, validate=validate.Length(max=200))
     active = fields.Bool()
+
+
+class SubscriptionItemSchema(Schema):
+    price = fields.Str(required=True)
+    quantity = fields.Int(missing=1, allow_none=True, validate=validate.Range(min=0))
+
+
+class SubscriptionCreateSchema(Schema):
+    customer = fields.Str(required=True)
+    items = fields.List(
+        fields.Nested(SubscriptionItemSchema),
+        required=True,
+        validate=validate.Length(min=1, max=20),
+    )
+    trial_period_days = fields.Int(validate=validate.Range(min=1, max=730))
+    collection_method = fields.Str(
+        missing="charge_automatically", validate=validate.OneOf(COLLECTION_METHODS)
+    )
+    days_until_due = fields.Int(validate=validate.Range(min=0, max=365))
+
+
+class SubscriptionUpdateSchema(Schema):
+    items = fields.List(
+        fields.Nested(SubscriptionItemSchema), validate=validate.Length(min=1, max=20)
+    )
+    proration_behavior = fields.Str(
+        missing="create_prorations", validate=validate.OneOf(PRORATION_BEHAVIORS)
+    )
+    cancel_at_period_end = fields.Bool()
+
+
+class SubscriptionCancelSchema(Schema):
+    prorate = fields.Bool(missing=False)
+    invoice_now = fields.Bool(missing=False)

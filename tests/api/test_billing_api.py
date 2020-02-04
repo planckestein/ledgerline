@@ -1,4 +1,12 @@
 """End-to-end flows through the public API."""
+from datetime import datetime
+
+
+def create_customer(api, token="tok_visa", **fields):
+    customer = api.post("/v1/customers", json=fields).get_json()
+    if token:
+        api.post("/v1/customers/%s/payment_methods" % customer["id"], json={"token": token})
+    return customer
 
 
 def create_price(api, **fields):
@@ -48,3 +56,48 @@ class TestCatalog:
         assert response.get_json()["active"] is False
         listed = api.get("/v1/prices", active="true").get_json()["data"]
         assert listed == []
+
+
+class TestSubscriptions:
+    def test_create_update_and_cancel(self, api, clock):
+        customer = create_customer(api)
+        price = create_price(api)
+        response = api.post(
+            "/v1/subscriptions",
+            json={"customer": customer["id"], "items": [{"price": price["id"], "quantity": 2}]},
+        )
+        assert response.status_code == 201, response.get_json()
+        sub = response.get_json()
+        assert sub["status"] == "active"
+        assert sub["items"]["data"][0]["quantity"] == 2
+        assert sub["current_period_end"] - sub["current_period_start"] == 30 * 86400
+
+        clock.set(datetime(2020, 6, 16, 12))
+        updated = api.post(
+            "/v1/subscriptions/%s" % sub["id"],
+            json={"items": [{"price": price["id"], "quantity": 1}], "cancel_at_period_end": True},
+        ).get_json()
+        assert updated["cancel_at_period_end"] is True
+
+        canceled = api.post("/v1/subscriptions/%s/cancel" % sub["id"], json={}).get_json()
+        assert canceled["status"] == "canceled"
+        again = api.post("/v1/subscriptions/%s/cancel" % sub["id"], json={})
+        assert again.status_code == 409
+
+    def test_errors(self, api):
+        customer = create_customer(api, token=None)
+        price = create_price(api)
+        response = api.post(
+            "/v1/subscriptions",
+            json={"customer": customer["id"], "items": [{"price": price["id"]}]},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["error"]["code"] == "missing_payment_method"
+
+        response = api.post("/v1/subscriptions", json={"customer": customer["id"], "items": []})
+        assert response.get_json()["error"]["param"] == "items"
+
+        response = api.post(
+            "/v1/subscriptions", json={"customer": customer["id"], "items": [{"price": "price_x"}]}
+        )
+        assert response.status_code == 404

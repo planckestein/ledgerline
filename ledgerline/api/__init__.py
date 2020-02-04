@@ -8,7 +8,7 @@ api_bp = Blueprint("api", __name__, url_prefix="/v1")
 
 
 def register_api(app):
-    from ledgerline.api import auth, catalog, customers, errors  # noqa: F401
+    from ledgerline.api import auth, catalog, customers, errors, subscriptions  # noqa: F401
 
     app.register_blueprint(api_bp)
     errors.register_error_handlers(app)

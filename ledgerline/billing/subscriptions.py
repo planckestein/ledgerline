@@ -19,6 +19,7 @@ def _validate_items(customer, items, expected_currency=None, expected_interval=N
     """Validate ``[(price, quantity), ...]`` and return it."""
     if not items:
         raise InvalidRequestError("A subscription needs at least one item", param="items")
+    seen = set()
     normalized = []
     currency = expected_currency
     interval = expected_interval
@@ -27,6 +28,11 @@ def _validate_items(customer, items, expected_currency=None, expected_interval=N
             raise InvalidRequestError("No such price: %s" % price.public_id, param="items")
         if not price.active:
             raise InvalidRequestError("Price %s is not active" % price.public_id, param="items")
+        if price.id in seen:
+            raise InvalidRequestError(
+                "Price %s appears more than once" % price.public_id, param="items"
+            )
+        seen.add(price.id)
         if currency is None:
             currency = price.currency
         elif price.currency != currency:

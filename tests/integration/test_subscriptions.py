@@ -97,6 +97,12 @@ class TestCreate:
                 [factories.price(tenant), factories.price(tenant, interval="year")],
             )
 
+    def test_rejects_duplicate_prices(self, tenant):
+        customer = factories.customer(tenant)
+        price = factories.price(tenant)
+        with pytest.raises(InvalidRequestError):
+            factories.subscribe(customer, [price, price])
+
     def test_rejects_inactive_price(self, tenant):
         customer = factories.customer(tenant)
         price = factories.price(tenant)

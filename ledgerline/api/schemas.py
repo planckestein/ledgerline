@@ -117,3 +117,28 @@ class SubscriptionUpdateSchema(Schema):
 class SubscriptionCancelSchema(Schema):
     prorate = fields.Bool(missing=False)
     invoice_now = fields.Bool(missing=False)
+
+
+class InvoiceItemSchema(Schema):
+    customer = fields.Str(required=True)
+    subscription = fields.Str()
+    amount = fields.Int(required=True)
+    currency = Currency(required=True)
+    description = fields.Str(required=True, validate=validate.Length(min=1, max=500))
+
+    @validates_schema
+    def _check(self, data, **kwargs):
+        if data.get("amount") == 0:
+            raise ValidationError("amount must not be zero", "amount")
+
+
+class InvoiceCreateSchema(Schema):
+    customer = fields.Str(required=True)
+    collection_method = fields.Str(
+        missing="charge_automatically", validate=validate.OneOf(COLLECTION_METHODS)
+    )
+    days_until_due = fields.Int(validate=validate.Range(min=0, max=365))
+
+
+class InvoicePaySchema(Schema):
+    paid_out_of_band = fields.Bool(missing=False)

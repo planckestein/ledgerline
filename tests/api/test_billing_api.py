@@ -72,12 +72,17 @@ class TestSubscriptions:
         assert sub["items"]["data"][0]["quantity"] == 2
         assert sub["current_period_end"] - sub["current_period_start"] == 30 * 86400
 
+        invoices = api.get("/v1/invoices", subscription=sub["id"]).get_json()["data"]
+        assert [(i["total"], i["status"]) for i in invoices] == [(2000, "paid")]
+
         clock.set(datetime(2020, 6, 16, 12))
         updated = api.post(
             "/v1/subscriptions/%s" % sub["id"],
             json={"items": [{"price": price["id"], "quantity": 1}], "cancel_at_period_end": True},
         ).get_json()
         assert updated["cancel_at_period_end"] is True
+        pending = api.get("/v1/invoiceitems", customer=customer["id"], pending="true").get_json()
+        assert sorted(item["amount"] for item in pending["data"]) == [-1000, 500]
 
         canceled = api.post("/v1/subscriptions/%s/cancel" % sub["id"], json={}).get_json()
         assert canceled["status"] == "canceled"
@@ -101,3 +106,75 @@ class TestSubscriptions:
             "/v1/subscriptions", json={"customer": customer["id"], "items": [{"price": "price_x"}]}
         )
         assert response.status_code == 404
+
+
+class TestInvoices:
+    def test_manual_invoice_flow(self, api):
+        customer = create_customer(api)
+        for amount in (1500, 2500):
+            response = api.post(
+                "/v1/invoiceitems",
+                json={
+                    "customer": customer["id"],
+                    "amount": amount,
+                    "currency": "eur",
+                    "description": "Consulting",
+                },
+            )
+            assert response.status_code == 201
+        invoice = api.post("/v1/invoices", json={"customer": customer["id"]}).get_json()
+        assert invoice["status"] == "draft"
+        assert invoice["total"] == 4000
+
+        finalized = api.post("/v1/invoices/%s/finalize" % invoice["id"]).get_json()
+        assert finalized["status"] == "open"
+        assert finalized["number"].endswith("-0001")
+        paid = api.post("/v1/invoices/%s/pay" % invoice["id"], json={}).get_json()
+        assert paid["status"] == "paid"
+        attempts = api.get("/v1/invoices/%s/payment_attempts" % invoice["id"]).get_json()
+        assert [a["status"] for a in attempts["data"]] == ["succeeded"]
+
+    def test_declined_payment_returns_402(self, api):
+        customer = create_customer(api, token="tok_chargeDeclined")
+        api.post(
+            "/v1/invoiceitems",
+            json={"customer": customer["id"], "amount": 100, "currency": "eur", "description": "x"},
+        )
+        invoice = api.post("/v1/invoices", json={"customer": customer["id"]}).get_json()
+        api.post("/v1/invoices/%s/finalize" % invoice["id"])
+        response = api.post("/v1/invoices/%s/pay" % invoice["id"], json={})
+        assert response.status_code == 402
+        assert response.get_json()["error"]["code"] == "card_declined"
+        fetched = api.get("/v1/invoices/%s" % invoice["id"]).get_json()
+        assert fetched["attempt_count"] == 1
+        assert fetched["status"] == "open"
+
+    def test_invoice_item_currency_must_match_customer(self, api):
+        customer = create_customer(api)
+        api.post(
+            "/v1/invoiceitems",
+            json={"customer": customer["id"], "amount": 100, "currency": "eur", "description": "x"},
+        )
+        response = api.post(
+            "/v1/invoiceitems",
+            json={"customer": customer["id"], "amount": 100, "currency": "usd", "description": "x"},
+        )
+        assert response.get_json()["error"]["param"] == "currency"
+
+    def test_no_pending_items(self, api):
+        customer = create_customer(api)
+        response = api.post("/v1/invoices", json={"customer": customer["id"]})
+        assert response.status_code == 400
+
+    def test_void_and_illegal_transitions(self, api):
+        customer = create_customer(api)
+        api.post(
+            "/v1/invoiceitems",
+            json={"customer": customer["id"], "amount": 100, "currency": "eur", "description": "x"},
+        )
+        invoice = api.post("/v1/invoices", json={"customer": customer["id"]}).get_json()
+        assert api.post("/v1/invoices/%s/pay" % invoice["id"], json={}).status_code == 409
+        api.post("/v1/invoices/%s/finalize" % invoice["id"])
+        voided = api.post("/v1/invoices/%s/void" % invoice["id"]).get_json()
+        assert voided["status"] == "void"
+        assert api.post("/v1/invoices/%s/finalize" % invoice["id"]).status_code == 409

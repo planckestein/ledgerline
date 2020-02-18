@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from ledgerline.billing import invoicing
-from ledgerline.errors import InvalidStateTransition
+from ledgerline.errors import InvalidStateTransition, InvoiceError
 from ledgerline.models import InvoiceItem
 from tests.support import factories
 
@@ -50,6 +50,13 @@ class TestLifecycle:
         invoicing.finalize_invoice(invoice)
         with pytest.raises(InvalidStateTransition):
             invoicing.finalize_invoice(invoice)
+
+    def test_negative_total_cannot_be_finalized(self, tenant):
+        customer = factories.customer(tenant)
+        invoice = manual_invoice(customer, 300, -500)
+        with pytest.raises(InvoiceError) as excinfo:
+            invoicing.finalize_invoice(invoice)
+        assert excinfo.value.code == "invoice_negative_total"
 
     def test_zero_total_is_paid_on_finalize(self, tenant, gateway):
         invoice = manual_invoice(factories.customer(tenant), 500, -500)

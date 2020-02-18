@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from ledgerline import clock
 from ledgerline.billing import invoice_builder
-from ledgerline.errors import InvalidRequestError, InvalidStateTransition
+from ledgerline.errors import InvalidRequestError, InvalidStateTransition, InvoiceError
 from ledgerline.extensions import db
 from ledgerline.models import Customer, InvoiceItem
 
@@ -67,6 +67,11 @@ def finalize_invoice(invoice):
             % (invoice.public_id, invoice.status)
         )
     invoice_builder.compute_totals(invoice)
+    if invoice.total < 0:
+        raise InvoiceError(
+            "Invoice total cannot be negative (got %d)" % invoice.total,
+            code="invoice_negative_total",
+        )
 
     now = clock.utcnow()
     invoice.number = _allocate_number(invoice.customer)

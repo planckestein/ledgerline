@@ -4,6 +4,7 @@ import pytest
 
 from ledgerline.billing import invoicing
 from ledgerline.billing import subscriptions as service
+from ledgerline.billing.renewal import run_billing_cycle
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition
 from ledgerline.models import Invoice, InvoiceItem
 from tests.support import factories
@@ -76,6 +77,14 @@ class TestCreate:
         assert sub.billing_cycle_anchor == trial_end
         assert invoices_of(sub) == []
 
+        clock.set(trial_end)
+        run_billing_cycle()
+        assert sub.status == "active"
+        [invoice] = invoices_of(sub)
+        assert invoice.period_start == trial_end
+        assert invoice.period_end == datetime(2020, 7, 15, 12)
+        assert invoice.total == 1000
+
     def test_rejects_mixed_currencies(self, tenant):
         customer = factories.customer(tenant)
         with pytest.raises(InvalidRequestError):
@@ -128,6 +137,13 @@ class TestChangeItems:
         assert items[0].period_start == JUN_16
         assert items[0].period_end == JUL_1
         assert sub.active_items[0].quantity == 3
+
+        clock.set(JUL_1)
+        run_billing_cycle()
+        renewal = invoices_of(sub)[-1]
+        assert [line.amount for line in renewal.lines] == [3000, -500, 1500]
+        assert renewal.total == 4000
+        assert pending_items(customer) == []
 
     def test_swapping_prices_credits_old_and_charges_new(self, tenant, clock):
         customer = factories.customer(tenant)
@@ -182,6 +198,18 @@ class TestChangeItems:
 
 
 class TestCancel:
+    def test_cancel_at_period_end(self, tenant, clock):
+        customer = factories.customer(tenant)
+        sub = factories.subscribe(customer, factories.price(tenant))
+        service.schedule_cancellation(sub)
+        assert sub.status == "active"
+
+        clock.set(JUL_1 + timedelta(hours=1))
+        run_billing_cycle()
+        assert sub.status == "canceled"
+        assert sub.ended_at == JUL_1
+        assert len(invoices_of(sub)) == 1
+
     def test_cancel_immediately_with_proration(self, tenant, clock):
         customer = factories.customer(tenant)
         sub = factories.subscribe(customer, factories.price(tenant, unit_amount=1000))

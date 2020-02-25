@@ -1,6 +1,8 @@
 """End-to-end flows through the public API."""
 from datetime import datetime
 
+from ledgerline.billing.renewal import run_billing_cycle
+
 
 def create_customer(api, token="tok_visa", **fields):
     customer = api.post("/v1/customers", json=fields).get_json()
@@ -178,3 +180,15 @@ class TestInvoices:
         voided = api.post("/v1/invoices/%s/void" % invoice["id"]).get_json()
         assert voided["status"] == "void"
         assert api.post("/v1/invoices/%s/finalize" % invoice["id"]).status_code == 409
+
+    def test_renewal_invoices_are_listed(self, api, clock):
+        customer = create_customer(api)
+        price = create_price(api)
+        api.post(
+            "/v1/subscriptions",
+            json={"customer": customer["id"], "items": [{"price": price["id"]}]},
+        )
+        clock.set(datetime(2020, 7, 1, 12))
+        run_billing_cycle()
+        data = api.get("/v1/invoices", customer=customer["id"]).get_json()["data"]
+        assert [i["billing_reason"] for i in data] == ["subscription_cycle", "subscription_create"]

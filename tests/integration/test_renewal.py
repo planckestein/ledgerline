@@ -53,6 +53,19 @@ def test_catches_up_on_missed_periods(tenant, clock):
     ]
 
 
+def test_weekly_and_yearly_intervals(tenant, clock):
+    customer = factories.customer(tenant)
+    weekly = factories.subscribe(customer, factories.price(tenant, interval="week"))
+    other = factories.customer(tenant)
+    yearly = factories.subscribe(other, factories.price(tenant, interval="year"))
+    assert weekly.current_period_end == datetime(2020, 6, 8, 12)
+    assert yearly.current_period_end == datetime(2021, 6, 1, 12)
+    clock.set(datetime(2020, 6, 15, 12))
+    run_billing_cycle()
+    assert weekly.current_period_end == datetime(2020, 6, 22, 12)
+    assert yearly.current_period_end == datetime(2021, 6, 1, 12)
+
+
 def test_failed_renewal_moves_subscription_to_past_due(tenant, clock):
     from ledgerline.payments import service as payments
 

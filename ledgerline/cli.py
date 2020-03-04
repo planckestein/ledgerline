@@ -1,4 +1,5 @@
 """``flask`` CLI commands for operators."""
+import json
 
 import click
 from flask.cli import AppGroup
@@ -9,6 +10,7 @@ from ledgerline.geo import normalize_country
 from ledgerline.models import ApiKey, Tenant
 
 tenants_cli = AppGroup("tenants", help="Manage tenants and API keys.")
+billing_cli = AppGroup("billing", help="Run billing jobs by hand.")
 
 
 @tenants_cli.command("create")
@@ -40,5 +42,22 @@ def issue_key(tenant_id):
     click.echo(secret)
 
 
+@billing_cli.command("run")
+def billing_run():
+    """Renew every subscription whose period has ended."""
+    from ledgerline.billing.renewal import run_billing_cycle
+
+    click.echo(json.dumps(run_billing_cycle(), indent=2))
+
+
+@billing_cli.command("retry-payments")
+def billing_retry_payments():
+    """Retry every invoice whose next payment attempt is due."""
+    from ledgerline.payments.dunning import retry_due_payments
+
+    click.echo(json.dumps(retry_due_payments(), indent=2))
+
+
 def register_cli(app):
     app.cli.add_command(tenants_cli)
+    app.cli.add_command(billing_cli)

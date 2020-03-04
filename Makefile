@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install lint format test test-postgres coverage migrate run
+.PHONY: install lint format test test-postgres coverage migrate run worker
 
 install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
@@ -28,3 +28,6 @@ migrate:
 
 run:
 	FLASK_APP=wsgi.py FLASK_ENV=development $(PYTHON) -m flask run
+
+worker:
+	celery -A celery_worker.celery worker -B -l info

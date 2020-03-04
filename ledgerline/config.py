@@ -16,6 +16,10 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
 
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+    CELERY_TASK_ALWAYS_EAGER = False
+
     # Name of the payment gateway adapter registered in ledgerline.payments.gateway.
     LEDGERLINE_PAYMENT_GATEWAY = os.environ.get("LEDGERLINE_PAYMENT_GATEWAY", "fake")
 
@@ -30,6 +34,9 @@ class DevelopmentConfig(BaseConfig):
 class TestingConfig(BaseConfig):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URL", "sqlite://")
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_BROKER_URL = "memory://"
+    CELERY_RESULT_BACKEND = "cache+memory://"
 
 
 class ProductionConfig(BaseConfig):

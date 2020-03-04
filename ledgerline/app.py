@@ -35,8 +35,10 @@ def create_app(config_name=None, **overrides):
     from ledgerline.api import register_api
     from ledgerline.cli import register_cli
     from ledgerline.payments.gateway import init_gateway
+    from ledgerline.tasks import init_celery
 
     init_gateway(app)
+    init_celery(app)
     register_api(app)
     register_cli(app)
 

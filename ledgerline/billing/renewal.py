@@ -92,13 +92,19 @@ def due_subscription_ids(now):
 
 
 def run_billing_cycle(now=None):
-    """Renew every subscription whose period has ended by ``now``."""
+    """Renew every due subscription, committing one subscription at a time."""
     now = now or clock.utcnow()
-    summary = {"subscriptions": 0, "invoices": 0}
+    summary = {"subscriptions": 0, "invoices": 0, "errors": []}
     for subscription_id in due_subscription_ids(now):
         subscription = Subscription.query.get(subscription_id)
-        invoices = renew_subscription(subscription, now)
-        db.session.commit()
+        try:
+            invoices = renew_subscription(subscription, now)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            log.exception("Renewal failed for subscription id=%s", subscription_id)
+            summary["errors"].append(subscription_id)
+            continue
         summary["subscriptions"] += 1
         summary["invoices"] += len(invoices)
     return summary

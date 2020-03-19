@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from ledgerline.billing import renewal
 from ledgerline.billing.renewal import run_billing_cycle
 from ledgerline.models import Invoice
 from tests.support import factories
@@ -20,7 +21,7 @@ def test_renews_monthly_subscription(tenant, clock, gateway):
     clock.set(JUL_1)
     summary = run_billing_cycle()
 
-    assert summary == {"subscriptions": 1, "invoices": 1}
+    assert summary == {"subscriptions": 1, "invoices": 1, "errors": []}
     assert (sub.current_period_start, sub.current_period_end) == (JUL_1, AUG_1)
     renewal_invoice = invoices_of(sub)[-1]
     assert renewal_invoice.billing_reason == "subscription_cycle"
@@ -78,3 +79,22 @@ def test_failed_renewal_moves_subscription_to_past_due(tenant, clock):
     assert sub.status == "past_due"
     assert invoice.status == "open"
     assert invoice.next_payment_attempt == JUL_1 + timedelta(days=3)
+
+
+def test_one_failing_subscription_does_not_block_the_run(db, tenant, clock, monkeypatch):
+    first = factories.subscribe(factories.customer(tenant), factories.price(tenant))
+    second = factories.subscribe(factories.customer(tenant), factories.price(tenant))
+    db.session.commit()
+    original = renewal.renew_subscription
+
+    def flaky(subscription, now=None):
+        if subscription.id == first.id:
+            raise RuntimeError("boom")
+        return original(subscription, now)
+
+    monkeypatch.setattr(renewal, "renew_subscription", flaky)
+    clock.set(JUL_1)
+    summary = run_billing_cycle()
+    assert summary["errors"] == [first.id]
+    assert summary["subscriptions"] == 1
+    assert len(invoices_of(second)) == 2

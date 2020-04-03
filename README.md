@@ -88,6 +88,7 @@ The suite is organised as `tests/unit` (pure functions), `tests/integration`
 * [docs/billing-model.md](docs/billing-model.md) – **the billing specification**
 * [docs/api.md](docs/api.md) – API reference
 * [docs/adr](docs/adr) – architecture decision records
+* [CHANGELOG.md](CHANGELOG.md)
 
 ## Repository layout
 

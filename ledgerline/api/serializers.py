@@ -12,6 +12,13 @@ def ts(moment):
     return calendar.timegm(moment.utctimetuple())
 
 
+def _decimal_str(value):
+    if value is None:
+        return None
+    text = format(value.normalize(), "f")
+    return text
+
+
 def serialize_customer(customer):
     default = customer.default_payment_method
     return {
@@ -70,6 +77,23 @@ def serialize_price(price):
     }
 
 
+def serialize_coupon(coupon):
+    return {
+        "id": coupon.public_id,
+        "object": "coupon",
+        "name": coupon.name,
+        "percent_off": _decimal_str(coupon.percent_off),
+        "amount_off": coupon.amount_off,
+        "currency": coupon.currency,
+        "duration": coupon.duration,
+        "duration_in_months": coupon.duration_in_months,
+        "max_redemptions": coupon.max_redemptions,
+        "times_redeemed": coupon.times_redeemed,
+        "valid": coupon.valid,
+        "created": ts(coupon.created_at),
+    }
+
+
 def serialize_subscription_item(item):
     return {
         "id": item.public_id,
@@ -112,6 +136,7 @@ def serialize_invoice_line(line):
         "description": line.description,
         "quantity": line.quantity,
         "amount": line.amount,
+        "discount_amount": line.discount_amount,
         "price": line.price.public_id if line.price is not None else None,
         "proration": line.proration,
         "period": {"start": ts(line.period_start), "end": ts(line.period_end)},
@@ -132,9 +157,11 @@ def serialize_invoice(invoice):
         "period_start": ts(invoice.period_start),
         "period_end": ts(invoice.period_end),
         "subtotal": invoice.subtotal,
+        "discount_total": invoice.discount_total,
         "total": invoice.total,
         "amount_due": invoice.amount_due,
         "amount_paid": invoice.amount_paid,
+        "coupon": invoice.coupon.public_id if invoice.coupon else None,
         "attempt_count": invoice.attempt_count,
         "next_payment_attempt": ts(invoice.next_payment_attempt),
         "due_date": ts(invoice.due_date),

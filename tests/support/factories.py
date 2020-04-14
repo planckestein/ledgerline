@@ -3,11 +3,12 @@
 They flush but never commit; tests decide when a transaction ends.
 """
 import itertools
+from decimal import Decimal
 
-from ledgerline.billing import subscriptions
+from ledgerline.billing import discounts, subscriptions
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import ApiKey, Customer, InvoiceItem, Price, Product, Tenant
+from ledgerline.models import ApiKey, Coupon, Customer, InvoiceItem, Price, Product, Tenant
 from ledgerline.payments import service as payment_service
 
 _counter = itertools.count(1)
@@ -87,6 +88,32 @@ def price(
     return obj
 
 
+def coupon(
+    tenant,
+    percent_off=None,
+    amount_off=None,
+    currency=None,
+    duration="forever",
+    duration_in_months=None,
+    max_redemptions=None,
+):
+    obj = Coupon(
+        tenant_id=tenant.id,
+        name="Coupon %d" % next(_counter),
+        percent_off=Decimal(str(percent_off)) if percent_off is not None else None,
+        amount_off=amount_off,
+        currency=currency,
+        duration=duration,
+        duration_in_months=duration_in_months,
+        max_redemptions=max_redemptions,
+        times_redeemed=0,
+        valid=True,
+    )
+    db.session.add(obj)
+    db.session.flush()
+    return obj
+
+
 def subscribe(customer, items, **kwargs):
     """``items`` is a Price, or a list of Price / (Price, quantity)."""
     if isinstance(items, (Price, tuple)):
@@ -95,6 +122,12 @@ def subscribe(customer, items, **kwargs):
     sub = subscriptions.create_subscription(customer, normalized, **kwargs)
     db.session.flush()
     return sub
+
+
+def customer_discount(customer, coupon_obj):
+    discount = discounts.create_discount(coupon_obj, customer)
+    db.session.flush()
+    return discount
 
 
 def invoice_item(customer, amount, description="One-off charge", currency=None, subscription=None):

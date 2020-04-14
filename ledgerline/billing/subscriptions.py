@@ -5,7 +5,7 @@ Renewals live in :mod:`ledgerline.billing.renewal`.
 from datetime import timedelta
 
 from ledgerline import clock
-from ledgerline.billing import invoice_builder, invoicing, periods, pricing, proration
+from ledgerline.billing import discounts, invoice_builder, invoicing, periods, pricing, proration
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition
 from ledgerline.extensions import db
 from ledgerline.models import InvoiceItem, Subscription, SubscriptionItem
@@ -88,6 +88,7 @@ def create_subscription(
     customer,
     items,
     trial_period_days=None,
+    coupon=None,
     collection_method="charge_automatically",
     days_until_due=None,
 ):
@@ -104,6 +105,8 @@ def create_subscription(
 
     specs = _validate_items(customer, items)
     first_price = specs[0][0]
+    if coupon is not None:
+        discounts.assert_redeemable(coupon, first_price.currency)
 
     now = clock.utcnow()
     if customer.currency is None:
@@ -141,6 +144,9 @@ def create_subscription(
             )
         )
     db.session.flush()
+
+    if coupon is not None:
+        discounts.create_discount(coupon, customer, subscription=subscription, start=now)
 
     if subscription.status == "trialing":
         return subscription

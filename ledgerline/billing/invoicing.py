@@ -9,7 +9,7 @@ State machine::
 from datetime import timedelta
 
 from ledgerline import clock
-from ledgerline.billing import invoice_builder
+from ledgerline.billing import discounts, invoice_builder
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition, InvoiceError
 from ledgerline.extensions import db
 from ledgerline.models import Customer, InvoiceItem
@@ -66,7 +66,7 @@ def finalize_invoice(invoice):
             "Only draft invoices can be finalized (invoice %s is %s)"
             % (invoice.public_id, invoice.status)
         )
-    invoice_builder.compute_totals(invoice)
+    discount = invoice_builder.compute_totals(invoice)
     if invoice.total < 0:
         raise InvoiceError(
             "Invoice total cannot be negative (got %d)" % invoice.total,
@@ -81,6 +81,7 @@ def finalize_invoice(invoice):
         invoice.due_date = now + timedelta(days=invoice.days_until_due or 30)
     else:
         invoice.due_date = now
+    discounts.close_once_discount(discount, now)
     db.session.flush()
 
     if invoice.total == 0:

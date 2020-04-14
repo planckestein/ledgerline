@@ -62,13 +62,38 @@ charge   =  round(new_amount × fraction)
 * `proration_behavior="always_invoice"` bills the prorations immediately;
   `"none"` creates no prorations.
 
-## 3. Invoice invariants
+## 3. Discounts
+
+At most one discount applies to an invoice: a subscription discount wins over
+a customer discount. A discount is active for an invoice if
+`discount.start <= reference < discount.end` where `reference` is the
+invoice's `period_start` (or the current time for manual invoices).
+
+* `once` — the first invoice only. `repeating` — `duration_in_months` months
+  from the start. `forever` — no end.
+* Only lines with a **positive amount** are discountable.
+
+**Allocation.** The invoice-level discount is computed first and then
+allocated across the discountable lines in proportion to their amounts using
+the largest-remainder method (`Money.allocate`); ties go to the earlier line:
+
+```
+percent_off:  discount_total = round(discountable_subtotal × percent_off / 100)
+amount_off:   discount_total = min(amount_off, discountable_subtotal)   # same currency only
+line.discount_amount = allocation of discount_total     # sum(lines) == discount_total
+```
+
+Example: two lines of 10.05 USD and a 10 % coupon: `discount_total = 2.01`,
+allocated as `1.01` and `1.00` (not `1.01 + 1.01`).
+
+## 4. Invoice invariants
 
 After `finalize_invoice` the following always hold:
 
 ```
 subtotal       == Σ line.amount
-total          == subtotal
+discount_total == Σ line.discount_amount
+total          == subtotal - discount_total
 amount_due     == total - amount_paid           (never negative)
 ```
 
@@ -79,7 +104,7 @@ Invoice states: `draft → open → paid`, `draft|open → void`,
 `open → uncollectible → paid`. Any other transition raises
 `InvalidStateTransition` (HTTP 409).
 
-## 4. Payments and dunning
+## 5. Payments and dunning
 
 Automatic collection charges the customer's default payment method once when
 an invoice is finalized. On failure the tenant's `dunning_retry_days`
@@ -88,7 +113,7 @@ the last retry `dunning_final_action` cancels the subscription (invoice →
 uncollectible) or marks it `unpaid`. The first invoice of a subscription is
 not retried; the subscription stays `incomplete` until it is paid.
 
-## 5. API conventions
+## 6. API conventions
 
 **Pagination.** Lists are ordered newest first by `(created_at, id)`. The
 order is total: objects created in the same instant (bulk imports, frozen

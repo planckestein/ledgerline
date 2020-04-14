@@ -17,7 +17,8 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
     Invariants once finalized (see docs/billing-model.md):
 
     * ``subtotal == sum(line.amount)``
-    * ``total == subtotal``
+    * ``discount_total == sum(line.discount_amount)``
+    * ``total == subtotal - discount_total``
     """
 
     __tablename__ = "invoices"
@@ -32,6 +33,7 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
     subscription_id = db.Column(
         db.Integer, db.ForeignKey("subscriptions.id"), nullable=True, index=True
     )
+    coupon_id = db.Column(db.Integer, db.ForeignKey("coupons.id"), nullable=True)
     number = db.Column(db.String(40), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="draft")
     billing_reason = db.Column(db.String(30), nullable=False, default="manual")
@@ -42,6 +44,7 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
     period_end = db.Column(db.DateTime, nullable=True)
 
     subtotal = db.Column(db.Integer, nullable=False, default=0)
+    discount_total = db.Column(db.Integer, nullable=False, default=0)
     total = db.Column(db.Integer, nullable=False, default=0)
     amount_due = db.Column(db.Integer, nullable=False, default=0)
     amount_paid = db.Column(db.Integer, nullable=False, default=0)
@@ -56,6 +59,7 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
 
     customer = db.relationship("Customer")
     subscription = db.relationship("Subscription")
+    coupon = db.relationship("Coupon")
     lines = db.relationship(
         "InvoiceLine",
         back_populates="invoice",
@@ -83,6 +87,7 @@ class InvoiceLine(PublicIdMixin, db.Model):
     description = db.Column(db.String(500), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     amount = db.Column(db.Integer, nullable=False)
+    discount_amount = db.Column(db.Integer, nullable=False, default=0)
     proration = db.Column(db.Boolean, nullable=False, default=False)
     period_start = db.Column(db.DateTime, nullable=True)
     period_end = db.Column(db.DateTime, nullable=True)
@@ -90,6 +95,10 @@ class InvoiceLine(PublicIdMixin, db.Model):
     invoice = db.relationship("Invoice", back_populates="lines")
     price = db.relationship("Price")
     subscription_item = db.relationship("SubscriptionItem")
+
+    @property
+    def net_amount(self):
+        return self.amount - self.discount_amount
 
 
 class InvoiceItem(PublicIdMixin, TimestampMixin, db.Model):

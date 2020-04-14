@@ -1,7 +1,7 @@
 """Assemble draft invoices and compute their totals."""
 from sqlalchemy import or_
 
-from ledgerline.billing import pricing
+from ledgerline.billing import discounts, pricing
 from ledgerline.billing.periods import describe as describe_period
 from ledgerline.extensions import db
 from ledgerline.models import Invoice, InvoiceItem, InvoiceLine
@@ -110,9 +110,15 @@ def discard_draft(invoice):
 
 
 def compute_totals(invoice):
-    """(Re)compute the invoice totals."""
+    """(Re)compute discounts and totals. Returns the applied discount, if any."""
     lines = sorted(invoice.lines, key=lambda line: line.position)
+    discount = discounts.active_discount_for(invoice)
+    coupon = discount.coupon if discount is not None else None
+    invoice.coupon = coupon
+
+    invoice.discount_total = discounts.apply_discount(lines, coupon, invoice.currency)
 
     invoice.subtotal = sum(line.amount for line in lines)
-    invoice.total = invoice.subtotal
+    invoice.total = invoice.subtotal - invoice.discount_total
     invoice.amount_due = max(invoice.total - invoice.amount_paid, 0)
+    return discount

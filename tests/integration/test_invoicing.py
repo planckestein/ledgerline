@@ -3,8 +3,9 @@ from datetime import datetime
 import pytest
 
 from ledgerline.billing import invoicing
+from ledgerline.billing.renewal import run_billing_cycle
 from ledgerline.errors import InvalidStateTransition, InvoiceError
-from ledgerline.models import InvoiceItem
+from ledgerline.models import Invoice, InvoiceItem
 from tests.support import factories
 
 
@@ -105,3 +106,97 @@ class TestLifecycle:
         )
         invoicing.finalize_invoice(invoice)
         assert invoice.due_date == datetime(2020, 6, 15, 12)
+
+
+class TestTotals:
+    def test_percent_off_across_lines(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(customer, factories.coupon(tenant, percent_off=10))
+        invoice = manual_invoice(customer, 1000, 3000)
+        assert [line.discount_amount for line in invoice.lines] == [100, 300]
+        assert invoice.total == 3600
+
+    def test_amount_off_is_allocated_proportionally(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(
+            customer, factories.coupon(tenant, amount_off=500, currency="eur")
+        )
+        invoice = manual_invoice(customer, 1000, 2000)
+        assert [line.discount_amount for line in invoice.lines] == [167, 333]
+        assert invoice.discount_total == 500
+        assert invoice.total == 2500
+
+    def test_amount_off_is_capped_at_subtotal(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(
+            customer, factories.coupon(tenant, amount_off=5000, currency="eur")
+        )
+        invoice = manual_invoice(customer, 1200)
+        assert invoice.discount_total == 1200
+        assert invoice.total == 0
+
+    def test_amount_off_in_other_currency_is_ignored(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(
+            customer, factories.coupon(tenant, amount_off=500, currency="usd")
+        )
+        invoice = manual_invoice(customer, 1200)
+        assert invoice.discount_total == 0
+
+    def test_credits_are_not_discounted(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(customer, factories.coupon(tenant, percent_off=10))
+        invoice = manual_invoice(customer, 1000, -300)
+        assert [line.discount_amount for line in invoice.lines] == [100, 0]
+        assert invoice.total == 600
+
+
+class TestCouponDuration:
+    def _subscription(self, tenant, coupon):
+        customer = factories.customer(tenant)
+        return factories.subscribe(
+            customer, factories.price(tenant, unit_amount=1000), coupon=coupon
+        )
+
+    def _totals(self, sub):
+        invoices = Invoice.query.filter_by(subscription_id=sub.id).order_by(Invoice.id).all()
+        return [invoice.total for invoice in invoices]
+
+    def test_once(self, tenant, clock):
+        sub = self._subscription(tenant, factories.coupon(tenant, percent_off=50, duration="once"))
+        clock.set(datetime(2020, 8, 1, 12))
+        run_billing_cycle()
+        assert self._totals(sub) == [500, 1000, 1000]
+
+    def test_repeating(self, tenant, clock):
+        coupon = factories.coupon(
+            tenant, percent_off=50, duration="repeating", duration_in_months=2
+        )
+        sub = self._subscription(tenant, coupon)
+        clock.set(datetime(2020, 9, 1, 12))
+        run_billing_cycle()
+        assert self._totals(sub) == [500, 500, 1000, 1000]
+
+    def test_forever(self, tenant, clock):
+        sub = self._subscription(tenant, factories.coupon(tenant, percent_off=50))
+        clock.set(datetime(2020, 8, 1, 12))
+        run_billing_cycle()
+        assert self._totals(sub) == [500, 500, 500]
+
+    def test_subscription_discount_beats_customer_discount(self, tenant):
+        customer = factories.customer(tenant)
+        factories.customer_discount(customer, factories.coupon(tenant, percent_off=10))
+        sub = factories.subscribe(
+            customer, factories.price(tenant), coupon=factories.coupon(tenant, percent_off=30)
+        )
+        invoice = Invoice.query.filter_by(subscription_id=sub.id).one()
+        assert invoice.discount_total == 300
+
+    def test_max_redemptions(self, tenant):
+        from ledgerline.errors import InvalidRequestError
+
+        coupon = factories.coupon(tenant, percent_off=10, max_redemptions=1)
+        factories.customer_discount(factories.customer(tenant), coupon)
+        assert coupon.valid is False
+        with pytest.raises(InvalidRequestError):
+            factories.customer_discount(factories.customer(tenant), coupon)

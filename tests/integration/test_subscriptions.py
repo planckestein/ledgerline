@@ -85,6 +85,15 @@ class TestCreate:
         assert invoice.period_end == datetime(2020, 7, 15, 12)
         assert invoice.total == 1000
 
+    def test_coupon_applies_to_first_invoice(self, tenant):
+        customer = factories.customer(tenant)
+        coupon = factories.coupon(tenant, percent_off=20)
+        sub = factories.subscribe(customer, factories.price(tenant), coupon=coupon)
+        [invoice] = invoices_of(sub)
+        assert invoice.discount_total == 200
+        assert invoice.total == 800
+        assert coupon.times_redeemed == 1
+
     def test_rejects_mixed_currencies(self, tenant):
         customer = factories.customer(tenant)
         with pytest.raises(InvalidRequestError):

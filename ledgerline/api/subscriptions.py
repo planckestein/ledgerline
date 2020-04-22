@@ -12,7 +12,7 @@ from ledgerline.api.schemas import (
 from ledgerline.api.serializers import serialize_subscription
 from ledgerline.billing import subscriptions as service
 from ledgerline.extensions import db
-from ledgerline.models import Customer, Price, Subscription
+from ledgerline.models import Coupon, Customer, Price, Subscription
 
 
 def _resolve_items(raw_items):
@@ -26,10 +26,12 @@ def _resolve_items(raw_items):
 def create_subscription():
     data = load(SubscriptionCreateSchema())
     customer = get_or_404(Customer, data["customer"], param="customer")
+    coupon = get_or_404(Coupon, data["coupon"], param="coupon") if data.get("coupon") else None
     subscription = service.create_subscription(
         customer,
         _resolve_items(data["items"]),
         trial_period_days=data.get("trial_period_days"),
+        coupon=coupon,
         collection_method=data["collection_method"],
         days_until_due=data.get("days_until_due"),
     )

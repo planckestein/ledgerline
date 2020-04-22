@@ -31,8 +31,10 @@ lower-case ISO 4217 codes.
 |---|---|
 | `POST /customers`, `GET /customers`, `GET/POST /customers/:id` | customers (`email`, `name`, `address`, `metadata`) |
 | `POST/GET /customers/:id/payment_methods` | attach a card token (`tok_visa`, ...) |
+| `POST /customers/:id/discount` | apply a coupon to every invoice of the customer |
 | `POST/GET /products`, `GET/POST /products/:id` | products |
 | `POST/GET /prices`, `GET/POST /prices/:id` | recurring prices (`unit_amount`, `billing_scheme`, `recurring`) |
+| `POST/GET /coupons`, `GET /coupons/:id` | coupons |
 | `POST/GET /subscriptions`, `GET/POST /subscriptions/:id` | subscriptions; update `items`, `proration_behavior`, `cancel_at_period_end` |
 | `POST /subscriptions/:id/cancel` | cancel now (`prorate`, `invoice_now`) |
 | `POST/GET /invoiceitems` | one-off charges and credits |

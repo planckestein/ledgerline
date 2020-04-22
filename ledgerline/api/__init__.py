@@ -11,6 +11,7 @@ def register_api(app):
     from ledgerline.api import (  # noqa: F401
         auth,
         catalog,
+        coupons,
         customers,
         errors,
         invoices,

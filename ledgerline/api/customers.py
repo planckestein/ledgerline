@@ -4,11 +4,12 @@ from flask import g, jsonify, request
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
-from ledgerline.api.schemas import CustomerSchema, PaymentMethodSchema
+from ledgerline.api.schemas import CustomerDiscountSchema, CustomerSchema, PaymentMethodSchema
 from ledgerline.api.serializers import serialize_customer, serialize_payment_method
+from ledgerline.billing import discounts
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import Customer, PaymentMethod
+from ledgerline.models import Coupon, Customer, PaymentMethod
 from ledgerline.payments import service as payment_service
 
 
@@ -73,3 +74,24 @@ def list_payment_methods(customer_id):
         PaymentMethod.customer_id == customer.id, PaymentMethod.detached_at.is_(None)
     )
     return jsonify(paginate(query, PaymentMethod, serialize_payment_method))
+
+
+@api_bp.route("/customers/<customer_id>/discount", methods=["POST"])
+def apply_customer_discount(customer_id):
+    customer = get_or_404(Customer, customer_id)
+    data = load(CustomerDiscountSchema())
+    coupon = get_or_404(Coupon, data["coupon"], param="coupon")
+    discount = discounts.create_discount(coupon, customer)
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "id": discount.public_id,
+                "object": "discount",
+                "coupon": coupon.public_id,
+                "customer": customer.public_id,
+                "subscription": None,
+            }
+        ),
+        201,
+    )

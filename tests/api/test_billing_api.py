@@ -59,6 +59,16 @@ class TestCatalog:
         listed = api.get("/v1/prices", active="true").get_json()["data"]
         assert listed == []
 
+    def test_coupons(self, api):
+        response = api.post("/v1/coupons", json={"duration": "once"})
+        assert response.status_code == 400
+        response = api.post("/v1/coupons", json={"duration": "repeating", "percent_off": "12.5"})
+        assert response.get_json()["error"]["param"] == "duration_in_months"
+        coupon = api.post(
+            "/v1/coupons", json={"amount_off": 500, "currency": "eur", "duration": "forever"}
+        ).get_json()
+        assert coupon["amount_off"] == 500 and coupon["valid"] is True
+
 
 class TestSubscriptions:
     def test_create_update_and_cancel(self, api, clock):

@@ -9,6 +9,7 @@ from ledgerline.billing import periods
 from ledgerline.billing.pricing import BILLING_SCHEMES
 from ledgerline.billing.subscriptions import COLLECTION_METHODS, PRORATION_BEHAVIORS
 from ledgerline.currency import CURRENCY_EXPONENTS
+from ledgerline.models.coupon import COUPON_DURATIONS
 
 
 def Currency(**kwargs):  # noqa: N802 - reads like a field class
@@ -31,6 +32,10 @@ class CustomerSchema(Schema):
     name = fields.Str(allow_none=True, validate=validate.Length(max=200))
     address = fields.Nested(AddressSchema, allow_none=True)
     metadata = fields.Dict(keys=fields.Str(), values=fields.Str())
+
+
+class CustomerDiscountSchema(Schema):
+    coupon = fields.Str(required=True)
 
 
 class PaymentMethodSchema(Schema):
@@ -85,6 +90,37 @@ class PriceUpdateSchema(Schema):
     active = fields.Bool()
 
 
+class CouponSchema(Schema):
+    name = fields.Str(allow_none=True, validate=validate.Length(max=200))
+    percent_off = fields.Decimal(places=3, validate=validate.Range(min=0, max=100))
+    amount_off = fields.Int(validate=validate.Range(min=1))
+    currency = Currency()
+    duration = fields.Str(required=True, validate=validate.OneOf(COUPON_DURATIONS))
+    duration_in_months = fields.Int(validate=validate.Range(min=1, max=36))
+    max_redemptions = fields.Int(validate=validate.Range(min=1))
+
+    @validates_schema
+    def _check(self, data, **kwargs):
+        has_percent = data.get("percent_off") is not None
+        has_amount = data.get("amount_off") is not None
+        if has_percent == has_amount:
+            raise ValidationError(
+                "Exactly one of percent_off or amount_off is required", "percent_off"
+            )
+        if has_percent and data["percent_off"] <= 0:
+            raise ValidationError("percent_off must be greater than 0", "percent_off")
+        if has_amount and not data.get("currency"):
+            raise ValidationError("currency is required with amount_off", "currency")
+        if data["duration"] == "repeating" and not data.get("duration_in_months"):
+            raise ValidationError(
+                "duration_in_months is required for repeating coupons", "duration_in_months"
+            )
+        if data["duration"] != "repeating" and data.get("duration_in_months"):
+            raise ValidationError(
+                "duration_in_months is only valid for repeating coupons", "duration_in_months"
+            )
+
+
 class SubscriptionItemSchema(Schema):
     price = fields.Str(required=True)
     quantity = fields.Int(missing=1, allow_none=True, validate=validate.Range(min=0))
@@ -98,6 +134,7 @@ class SubscriptionCreateSchema(Schema):
         validate=validate.Length(min=1, max=20),
     )
     trial_period_days = fields.Int(validate=validate.Range(min=1, max=730))
+    coupon = fields.Str()
     collection_method = fields.Str(
         missing="charge_automatically", validate=validate.OneOf(COLLECTION_METHODS)
     )

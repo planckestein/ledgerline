@@ -8,7 +8,7 @@ from decimal import Decimal
 from ledgerline.billing import discounts, subscriptions
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import ApiKey, Coupon, Customer, InvoiceItem, Price, Product, Tenant
+from ledgerline.models import ApiKey, Coupon, Customer, InvoiceItem, Price, Product, TaxRate, Tenant
 from ledgerline.payments import service as payment_service
 
 _counter = itertools.count(1)
@@ -32,6 +32,8 @@ def customer(
     email=None,
     country="DE",
     state=None,
+    vat_id=None,
+    tax_exempt=False,
     token="tok_visa",
     currency=None,
     billing_address=None,
@@ -43,6 +45,8 @@ def customer(
         email=email or "customer%d@example.com" % next(_counter),
         name="Customer",
         billing_address=billing_address,
+        vat_id=vat_id,
+        tax_exempt=tax_exempt,
         currency=currency,
     )
     db.session.add(obj)
@@ -81,6 +85,21 @@ def price(
         billing_scheme=billing_scheme,
         package_size=package_size,
         nickname=nickname,
+        active=True,
+    )
+    db.session.add(obj)
+    db.session.flush()
+    return obj
+
+
+def tax_rate(tenant, percentage="19", country=None, state=None, inclusive=False, name="VAT"):
+    obj = TaxRate(
+        tenant_id=tenant.id,
+        display_name=name,
+        percentage=Decimal(percentage),
+        inclusive=inclusive,
+        country=country,
+        state=state,
         active=True,
     )
     db.session.add(obj)

@@ -18,7 +18,7 @@ worker for periodic jobs.
         +-------------------------v--------------------------+
         |                 domain services                    |
         |  billing/   subscriptions, renewal, invoice_builder, |
-        |             invoicing, discounts,                  |
+        |             invoicing, discounts, tax,             |
         |             periods, proration, pricing            |
         |  payments/  gateway, service, dunning              |
         +-------------------------+--------------------------+
@@ -35,7 +35,7 @@ worker for periodic jobs.
 | `ledgerline.money`, `currency` | `Money` value object, currency exponents, rounding |
 | `ledgerline.geo` | country normalization, legacy billing-address parser |
 | `ledgerline.models` | SQLAlchemy models; no business logic beyond small properties |
-| `ledgerline.billing` | periods, pricing, prorations, discounts, invoice assembly and lifecycle, subscription lifecycle, renewals |
+| `ledgerline.billing` | periods, pricing, prorations, discounts, tax, invoice assembly and lifecycle, subscription lifecycle, renewals |
 | `ledgerline.payments` | gateway adapters (`fake` for dev/test), collection, dunning |
 | `ledgerline.api.serializers` | public JSON representations of API resources |
 | `ledgerline.api` | Flask blueprint: authentication, validation, pagination, resources |

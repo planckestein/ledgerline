@@ -29,7 +29,7 @@ lower-case ISO 4217 codes.
 
 | method & path | description |
 |---|---|
-| `POST /customers`, `GET /customers`, `GET/POST /customers/:id` | customers (`email`, `name`, `address`, `metadata`) |
+| `POST /customers`, `GET /customers`, `GET/POST /customers/:id` | customers (`email`, `name`, `address`, `vat_id`, `tax_exempt`, `metadata`) |
 | `POST/GET /customers/:id/payment_methods` | attach a card token (`tok_visa`, ...) |
 | `POST /customers/:id/discount` | apply a coupon to every invoice of the customer |
 | `POST/GET /products`, `GET/POST /products/:id` | products |

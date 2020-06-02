@@ -109,6 +109,27 @@ class TestLifecycle:
 
 
 class TestTotals:
+    def test_exclusive_tax(self, tenant):
+        factories.tax_rate(tenant, "19", country="DE")
+        invoice = manual_invoice(factories.customer(tenant), 1000)
+        assert (invoice.subtotal, invoice.tax_total, invoice.total) == (1000, 190, 1190)
+        assert invoice.lines[0].tax_inclusive is False
+
+    def test_inclusive_tax(self, tenant):
+        factories.tax_rate(tenant, "19", country="DE", inclusive=True)
+        invoice = manual_invoice(factories.customer(tenant), 1190)
+        assert (invoice.subtotal, invoice.tax_total, invoice.total) == (1190, 190, 1190)
+        invoicing.finalize_invoice(invoice)
+
+    def test_tax_is_computed_after_discount(self, tenant):
+        factories.tax_rate(tenant, "19", country="DE")
+        customer = factories.customer(tenant)
+        factories.customer_discount(customer, factories.coupon(tenant, percent_off=25))
+        invoice = manual_invoice(customer, 1000)
+        assert invoice.discount_total == 250
+        assert invoice.tax_total == 143  # 19% of 750 = 142.5
+        assert invoice.total == 893
+
     def test_percent_off_across_lines(self, tenant):
         customer = factories.customer(tenant)
         factories.customer_discount(customer, factories.coupon(tenant, percent_off=10))

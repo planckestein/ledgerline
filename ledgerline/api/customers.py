@@ -20,6 +20,11 @@ def _apply_fields(customer, data):
         customer.name = data["name"]
     if "address" in data:
         customer.billing_address = serialize_address(data["address"])
+    if "vat_id" in data:
+        vat_id = (data["vat_id"] or "").strip()
+        customer.vat_id = vat_id or None
+    if "tax_exempt" in data:
+        customer.tax_exempt = data["tax_exempt"]
     if "metadata" in data:
         customer.metadata_ = data["metadata"]
 
@@ -27,7 +32,7 @@ def _apply_fields(customer, data):
 @api_bp.route("/customers", methods=["POST"])
 def create_customer():
     data = load(CustomerSchema())
-    customer = Customer(tenant_id=g.tenant.id)
+    customer = Customer(tenant_id=g.tenant.id, tax_exempt=False)
     _apply_fields(customer, data)
     db.session.add(customer)
     db.session.commit()

@@ -18,7 +18,8 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
 
     * ``subtotal == sum(line.amount)``
     * ``discount_total == sum(line.discount_amount)``
-    * ``total == subtotal - discount_total``
+    * ``tax_total == sum(line.tax_amount)``
+    * ``total == subtotal - discount_total + exclusive tax``
     """
 
     __tablename__ = "invoices"
@@ -45,6 +46,7 @@ class Invoice(PublicIdMixin, TimestampMixin, db.Model):
 
     subtotal = db.Column(db.Integer, nullable=False, default=0)
     discount_total = db.Column(db.Integer, nullable=False, default=0)
+    tax_total = db.Column(db.Integer, nullable=False, default=0)
     total = db.Column(db.Integer, nullable=False, default=0)
     amount_due = db.Column(db.Integer, nullable=False, default=0)
     amount_paid = db.Column(db.Integer, nullable=False, default=0)
@@ -88,12 +90,16 @@ class InvoiceLine(PublicIdMixin, db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=1)
     amount = db.Column(db.Integer, nullable=False)
     discount_amount = db.Column(db.Integer, nullable=False, default=0)
+    tax_rate_id = db.Column(db.Integer, db.ForeignKey("tax_rates.id"), nullable=True)
+    tax_amount = db.Column(db.Integer, nullable=False, default=0)
+    tax_inclusive = db.Column(db.Boolean, nullable=False, default=False)
     proration = db.Column(db.Boolean, nullable=False, default=False)
     period_start = db.Column(db.DateTime, nullable=True)
     period_end = db.Column(db.DateTime, nullable=True)
 
     invoice = db.relationship("Invoice", back_populates="lines")
     price = db.relationship("Price")
+    tax_rate = db.relationship("TaxRate")
     subscription_item = db.relationship("SubscriptionItem")
 
     @property

@@ -29,6 +29,8 @@ class Customer(PublicIdMixin, TimestampMixin, db.Model):
     currency = db.Column(db.String(3), nullable=True)
     # Legacy free-form column, see ledgerline.geo for the formats it may contain.
     billing_address = db.Column(db.Text, nullable=True)
+    vat_id = db.Column(db.String(64), nullable=True)
+    tax_exempt = db.Column(db.Boolean, nullable=False, default=False)
     invoice_prefix = db.Column(db.String(12), nullable=False, default=generate_invoice_prefix)
     next_invoice_sequence = db.Column(db.Integer, nullable=False, default=1)
     metadata_ = db.Column("metadata", JSONText, nullable=True)

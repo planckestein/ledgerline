@@ -86,14 +86,29 @@ line.discount_amount = allocation of discount_total     # sum(lines) == discount
 Example: two lines of 10.05 USD and a 10 % coupon: `discount_total = 2.01`,
 allocated as `1.01` and `1.00` (not `1.01 + 1.01`).
 
-## 4. Invoice invariants
+## 4. Tax
+
+Rate selection is documented in `ledgerline/billing/tax.py`
+(exempt → EU reverse charge → country+state → country → global).
+
+Tax is computed **per line on the net amount** (`amount - discount_amount`)
+in the currency's minor units and rounded half away from zero to **one minor
+unit of that currency** — 1 cent for EUR, 1 yen for JPY, 1 fils for KWD:
+
+```
+exclusive: tax = round(net × p / 100)              line contributes net + tax
+inclusive: tax = net - round(net / (1 + p / 100))  line contributes net
+```
+
+## 5. Invoice invariants
 
 After `finalize_invoice` the following always hold:
 
 ```
 subtotal       == Σ line.amount
 discount_total == Σ line.discount_amount
-total          == subtotal - discount_total
+tax_total      == Σ line.tax_amount
+total          == subtotal - discount_total + Σ tax_amount of exclusive lines
 amount_due     == total - amount_paid           (never negative)
 ```
 
@@ -104,7 +119,7 @@ Invoice states: `draft → open → paid`, `draft|open → void`,
 `open → uncollectible → paid`. Any other transition raises
 `InvalidStateTransition` (HTTP 409).
 
-## 5. Payments and dunning
+## 6. Payments and dunning
 
 Automatic collection charges the customer's default payment method once when
 an invoice is finalized. On failure the tenant's `dunning_retry_days`
@@ -113,7 +128,7 @@ the last retry `dunning_final_action` cancels the subscription (invoice →
 uncollectible) or marks it `unpaid`. The first invoice of a subscription is
 not retried; the subscription stays `incomplete` until it is paid.
 
-## 6. API conventions
+## 7. API conventions
 
 **Pagination.** Lists are ordered newest first by `(created_at, id)`. The
 order is total: objects created in the same instant (bulk imports, frozen

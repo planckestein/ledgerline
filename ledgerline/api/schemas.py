@@ -31,6 +31,8 @@ class CustomerSchema(Schema):
     email = fields.Email(allow_none=True)
     name = fields.Str(allow_none=True, validate=validate.Length(max=200))
     address = fields.Nested(AddressSchema, allow_none=True)
+    vat_id = fields.Str(allow_none=True, validate=validate.Length(max=64))
+    tax_exempt = fields.Bool()
     metadata = fields.Dict(keys=fields.Str(), values=fields.Str())
 
 

@@ -28,6 +28,8 @@ def serialize_customer(customer):
         "name": customer.name,
         "currency": customer.currency,
         "address": customer.address,
+        "vat_id": customer.vat_id,
+        "tax_exempt": customer.tax_exempt,
         "invoice_prefix": customer.invoice_prefix,
         "default_payment_method": default.public_id if default else None,
         "metadata": customer.metadata_ or {},
@@ -74,6 +76,20 @@ def serialize_price(price):
         },
         "active": price.active,
         "created": ts(price.created_at),
+    }
+
+
+def serialize_tax_rate(rate):
+    return {
+        "id": rate.public_id,
+        "object": "tax_rate",
+        "display_name": rate.display_name,
+        "percentage": _decimal_str(rate.percentage),
+        "inclusive": rate.inclusive,
+        "country": rate.country,
+        "state": rate.state,
+        "active": rate.active,
+        "created": ts(rate.created_at),
     }
 
 
@@ -137,6 +153,9 @@ def serialize_invoice_line(line):
         "quantity": line.quantity,
         "amount": line.amount,
         "discount_amount": line.discount_amount,
+        "tax_amount": line.tax_amount,
+        "tax_rate": line.tax_rate.public_id if line.tax_rate is not None else None,
+        "tax_inclusive": line.tax_inclusive,
         "price": line.price.public_id if line.price is not None else None,
         "proration": line.proration,
         "period": {"start": ts(line.period_start), "end": ts(line.period_end)},
@@ -158,6 +177,7 @@ def serialize_invoice(invoice):
         "period_end": ts(invoice.period_end),
         "subtotal": invoice.subtotal,
         "discount_total": invoice.discount_total,
+        "tax_total": invoice.tax_total,
         "total": invoice.total,
         "amount_due": invoice.amount_due,
         "amount_paid": invoice.amount_paid,

@@ -40,6 +40,7 @@ class TestCustomers:
                 "email": "jane@example.com",
                 "name": "Jane",
                 "address": {"line1": "Unter den Linden 1", "city": "Berlin", "country": "de"},
+                "vat_id": " DE811907980 ",
                 "metadata": {"crm_id": "42"},
             },
         )
@@ -48,6 +49,7 @@ class TestCustomers:
         assert body["id"].startswith("cus_")
         assert body["address"]["country"] == "DE"
         assert body["address"]["city"] == "Berlin"
+        assert body["vat_id"] == "DE811907980"
         assert body["metadata"] == {"crm_id": "42"}
         assert body["currency"] is None
         assert len(body["invoice_prefix"]) == 8
@@ -57,9 +59,12 @@ class TestCustomers:
 
     def test_update(self, api):
         customer = api.post("/v1/customers", json={"email": "a@example.com"}).get_json()
-        response = api.post("/v1/customers/%s" % customer["id"], json={"name": "Renamed"})
+        response = api.post(
+            "/v1/customers/%s" % customer["id"], json={"name": "Renamed", "tax_exempt": True}
+        )
         assert response.status_code == 200
         assert response.get_json()["name"] == "Renamed"
+        assert response.get_json()["tax_exempt"] is True
         assert response.get_json()["email"] == "a@example.com"
 
     def test_validation_errors_name_the_parameter(self, api):

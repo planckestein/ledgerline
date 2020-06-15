@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container: python:3.8.1-slim-buster
+    container: python:3.8.3-slim-buster
     steps:
       - uses: actions/checkout@v2
       - run: pip install -r requirements-dev.txt
@@ -18,7 +18,7 @@ jobs:
 
   test-sqlite:
     runs-on: ubuntu-latest
-    container: python:3.8.1-slim-buster
+    container: python:3.8.3-slim-buster
     steps:
       - uses: actions/checkout@v2
       - run: pip install -r requirements-dev.txt
@@ -26,10 +26,10 @@ jobs:
 
   test-postgres:
     runs-on: ubuntu-latest
-    container: python:3.8.1-slim-buster
+    container: python:3.8.3-slim-buster
     services:
       postgres:
-        image: postgres:12.1
+        image: postgres:12.3
         env:
           POSTGRES_USER: ledgerline
           POSTGRES_PASSWORD: ledgerline

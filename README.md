@@ -30,13 +30,13 @@ migrations, Celery workers and a PostgreSQL database.
 | component | version |
 |---|---|
 | Python | 3.8 |
-| Flask / Werkzeug | 1.1.1 / 0.16.0 |
-| SQLAlchemy / Flask-SQLAlchemy | 1.3.12 / 2.4.1 |
-| Alembic / Flask-Migrate | 1.3.2 / 2.5.2 |
-| marshmallow | 3.3.0 |
-| Celery / Redis client | 4.4.0 / 3.3.11 |
-| PostgreSQL (psycopg2) | 12 (2.8.4) |
-| pytest / black / flake8 / isort | 5.3.2 / 19.10b0 / 3.7.9 / 4.3.21 |
+| Flask / Werkzeug | 1.1.2 / 1.0.1 |
+| SQLAlchemy / Flask-SQLAlchemy | 1.3.17 / 2.4.3 |
+| Alembic / Flask-Migrate | 1.4.2 / 2.5.3 |
+| marshmallow | 3.6.1 |
+| Celery / Redis client | 4.4.5 / 3.5.3 |
+| PostgreSQL (psycopg2) | 12 (2.8.5) |
+| pytest / black / flake8 / isort | 5.4.3 / 19.10b0 / 3.8.3 / 4.3.21 |
 
 Every dependency is pinned in `requirements.txt` / `requirements-dev.txt`.
 
@@ -60,7 +60,7 @@ curl -s localhost:5000/v1/customers \
   -d '{"email": "jane@example.com", "address": {"country": "DE"}}'
 ```
 
-With Docker (PostgreSQL 12 + Redis 5 + web + Celery worker):
+With Docker (PostgreSQL 12 + Redis 6 + web + Celery worker):
 
 ```bash
 docker-compose up --build web worker

@@ -92,6 +92,19 @@ class PriceUpdateSchema(Schema):
     active = fields.Bool()
 
 
+class TaxRateSchema(Schema):
+    display_name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    percentage = fields.Decimal(required=True, places=4, validate=validate.Range(min=0, max=100))
+    inclusive = fields.Bool(missing=False)
+    country = fields.Str(allow_none=True, validate=validate.Length(equal=2))
+    state = fields.Str(allow_none=True, validate=validate.Length(max=10))
+
+
+class TaxRateUpdateSchema(Schema):
+    display_name = fields.Str(validate=validate.Length(min=1, max=100))
+    active = fields.Bool()
+
+
 class CouponSchema(Schema):
     name = fields.Str(allow_none=True, validate=validate.Length(max=200))
     percent_off = fields.Decimal(places=3, validate=validate.Range(min=0, max=100))

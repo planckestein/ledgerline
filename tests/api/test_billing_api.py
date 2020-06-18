@@ -59,7 +59,13 @@ class TestCatalog:
         listed = api.get("/v1/prices", active="true").get_json()["data"]
         assert listed == []
 
-    def test_coupons(self, api):
+    def test_tax_rates_and_coupons(self, api):
+        rate = api.post(
+            "/v1/tax_rates", json={"display_name": "VAT", "percentage": "19.0", "country": "de"}
+        ).get_json()
+        assert rate["percentage"] == "19"
+        assert rate["country"] == "DE"
+
         response = api.post("/v1/coupons", json={"duration": "once"})
         assert response.status_code == 400
         response = api.post("/v1/coupons", json={"duration": "repeating", "percent_off": "12.5"})

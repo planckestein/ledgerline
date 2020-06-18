@@ -34,6 +34,7 @@ lower-case ISO 4217 codes.
 | `POST /customers/:id/discount` | apply a coupon to every invoice of the customer |
 | `POST/GET /products`, `GET/POST /products/:id` | products |
 | `POST/GET /prices`, `GET/POST /prices/:id` | recurring prices (`unit_amount`, `billing_scheme`, `recurring`) |
+| `POST/GET /tax_rates`, `GET/POST /tax_rates/:id` | tax rates |
 | `POST/GET /coupons`, `GET /coupons/:id` | coupons |
 | `POST/GET /subscriptions`, `GET/POST /subscriptions/:id` | subscriptions; update `items`, `proration_behavior`, `cancel_at_period_end` |
 | `POST /subscriptions/:id/cancel` | cancel now (`prorate`, `invoice_now`) |

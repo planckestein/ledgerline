@@ -16,6 +16,7 @@ def register_api(app):
         errors,
         invoices,
         subscriptions,
+        tax_rates,
     )
 
     app.register_blueprint(api_bp)

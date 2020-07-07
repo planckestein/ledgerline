@@ -16,7 +16,7 @@ DEFAULT_DAYS_UNTIL_DUE = 30
 
 
 def _validate_items(customer, items, expected_currency=None, expected_interval=None):
-    """Validate ``[(price, quantity), ...]`` and return it."""
+    """Validate ``[(price, quantity), ...]`` and return it with metered quantities normalized."""
     if not items:
         raise InvalidRequestError("A subscription needs at least one item", param="items")
     seen = set()
@@ -43,7 +43,9 @@ def _validate_items(customer, items, expected_currency=None, expected_interval=N
             interval = (price.interval, price.interval_count)
         elif (price.interval, price.interval_count) != interval:
             raise InvalidRequestError("All items must use the same billing interval", param="items")
-        if quantity is None or quantity < 1:
+        if price.is_metered:
+            quantity = 1
+        elif quantity is None or quantity < 1:
             raise InvalidRequestError("quantity must be at least 1", param="items")
         normalized.append((price, quantity))
 
@@ -56,8 +58,8 @@ def _validate_items(customer, items, expected_currency=None, expected_interval=N
     return normalized
 
 
-def _cycle_invoice(subscription, billing_reason, licensed_period=None):
-    period = licensed_period
+def _cycle_invoice(subscription, billing_reason, licensed_period=None, metered_period=None):
+    period = licensed_period or metered_period
     invoice = invoice_builder.create_draft(
         subscription.customer,
         currency=subscription.currency,
@@ -70,6 +72,8 @@ def _cycle_invoice(subscription, billing_reason, licensed_period=None):
     )
     if licensed_period:
         invoice_builder.add_licensed_lines(invoice, subscription, *licensed_period)
+    if metered_period:
+        invoice_builder.add_metered_lines(invoice, subscription, *metered_period)
     invoice_builder.attach_pending_items(invoice)
     return invoice
 
@@ -219,8 +223,9 @@ def update_subscription_items(subscription, items, proration_behavior="create_pr
     created = []
 
     for price_id, item in current.items():
+        licensed = not item.price.is_metered
         if price_id not in desired:
-            if prorate:
+            if prorate and licensed:
                 created.append(
                     _proration_item(subscription, item.price, item.quantity, fraction, True, now)
                 )
@@ -228,7 +233,7 @@ def update_subscription_items(subscription, items, proration_behavior="create_pr
             continue
         _, quantity = desired[price_id]
         if quantity != item.quantity:
-            if prorate:
+            if prorate and licensed:
                 created.append(
                     _proration_item(subscription, item.price, item.quantity, fraction, True, now)
                 )
@@ -240,7 +245,7 @@ def update_subscription_items(subscription, items, proration_behavior="create_pr
     for price_id, (price, quantity) in desired.items():
         if price_id in current:
             continue
-        if prorate:
+        if prorate and not price.is_metered:
             created.append(_proration_item(subscription, price, quantity, fraction, False, now))
         db.session.add(
             SubscriptionItem(
@@ -282,8 +287,8 @@ def cancel_subscription(subscription, prorate=False, invoice_now=False):
     """Cancel immediately.
 
     ``prorate`` credits unused licensed time as pending invoice items.
-    ``invoice_now`` bills pending items right away; if that invoice would be
-    negative the credits stay pending.
+    ``invoice_now`` bills outstanding metered usage and pending items right
+    away; if that invoice would be negative the credits stay pending.
     """
     if subscription.status == "canceled":
         raise InvalidStateTransition("Subscription is already canceled")
@@ -293,11 +298,15 @@ def cancel_subscription(subscription, prorate=False, invoice_now=False):
             subscription.current_period_start, subscription.current_period_end, now
         )
         for item in subscription.active_items:
-            _proration_item(subscription, item.price, item.quantity, fraction, True, now)
+            if not item.price.is_metered:
+                _proration_item(subscription, item.price, item.quantity, fraction, True, now)
         db.session.flush()
 
     if invoice_now:
-        invoice = _cycle_invoice(subscription, "subscription_cancel")
+        metered = None
+        if subscription.status != "trialing":
+            metered = (subscription.current_period_start, now)
+        invoice = _cycle_invoice(subscription, "subscription_cancel", metered_period=metered)
         if invoice.lines:
             invoice_builder.compute_totals(invoice)
         if not invoice.lines or invoice.total < 0:

@@ -20,6 +20,10 @@ class Price(PublicIdMixin, TimestampMixin, db.Model):
 
     * ``billing_scheme="per_unit"``: amount = unit_amount * quantity
     * ``billing_scheme="package"``: amount = ceil(quantity / package_size) * unit_amount
+
+    Licensed prices are billed in advance for the quantity on the subscription
+    item; metered prices are billed in arrears for the usage reported during
+    the period, aggregated according to ``aggregate_usage``.
     """
 
     __tablename__ = "prices"
@@ -35,6 +39,12 @@ class Price(PublicIdMixin, TimestampMixin, db.Model):
     package_size = db.Column(db.Integer, nullable=True)
     interval = db.Column(db.String(10), nullable=False)
     interval_count = db.Column(db.Integer, nullable=False, default=1)
+    usage_type = db.Column(db.String(10), nullable=False, default="licensed")
+    aggregate_usage = db.Column(db.String(30), nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
     product = db.relationship("Product")
+
+    @property
+    def is_metered(self):
+        return self.usage_type == "metered"

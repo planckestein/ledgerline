@@ -11,6 +11,7 @@ def make_price(**fields):
         billing_scheme="per_unit",
         interval="month",
         interval_count=1,
+        usage_type="licensed",
     )
     defaults.update(fields)
     price = Price(**defaults)

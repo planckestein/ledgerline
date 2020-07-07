@@ -41,8 +41,9 @@ A yearly subscription anchored on 2020-02-29 renews on 2021-02-28,
 regular periods start at the trial end.
 
 **Renewal** (`ledgerline.billing.renewal`) runs when
-`now >= current_period_end`. One invoice is created per elapsed period; it
-charges the items **in advance** for the new period.
+`now >= current_period_end`. One invoice is created per elapsed period; the
+licensed items are charged **in advance** for the new period and metered items
+are charged **in arrears** for the period that just ended.
 
 ## 2. Prorations
 
@@ -58,7 +59,7 @@ charge   =  round(new_amount × fraction)
 
 * The fraction is computed **to the second** (not in whole days).
 * Each proration item is rounded on its own.
-* Trialing subscriptions are never prorated.
+* Metered items and trialing subscriptions are never prorated.
 * `proration_behavior="always_invoice"` bills the prorations immediately;
   `"none"` creates no prorations.
 

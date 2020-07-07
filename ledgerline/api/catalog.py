@@ -52,6 +52,7 @@ def create_price():
     data = load(PriceSchema())
     product = get_or_404(Product, data["product"], param="product")
     recurring = data["recurring"]
+    usage_type = recurring.get("usage_type", "licensed")
     price = Price(
         tenant_id=g.tenant.id,
         product=product,
@@ -62,6 +63,10 @@ def create_price():
         package_size=data.get("package_size"),
         interval=recurring["interval"],
         interval_count=recurring.get("interval_count", 1),
+        usage_type=usage_type,
+        aggregate_usage=(recurring.get("aggregate_usage") or "sum")
+        if usage_type == "metered"
+        else None,
     )
     db.session.add(price)
     db.session.commit()

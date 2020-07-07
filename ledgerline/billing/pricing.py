@@ -1,6 +1,7 @@
 """Turn a price and a quantity into an amount."""
 
 BILLING_SCHEMES = ("per_unit", "package")
+USAGE_TYPES = ("licensed", "metered")
 
 
 def amount_for_quantity(price, quantity):

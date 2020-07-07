@@ -6,8 +6,9 @@ Unknown fields are rejected so that typos in parameter names surface as
 from marshmallow import Schema, ValidationError, fields, validate, validates_schema
 
 from ledgerline.billing import periods
-from ledgerline.billing.pricing import BILLING_SCHEMES
+from ledgerline.billing.pricing import BILLING_SCHEMES, USAGE_TYPES
 from ledgerline.billing.subscriptions import COLLECTION_METHODS, PRORATION_BEHAVIORS
+from ledgerline.billing.usage import AGGREGATIONS
 from ledgerline.currency import CURRENCY_EXPONENTS
 from ledgerline.models.coupon import COUPON_DURATIONS
 
@@ -60,6 +61,8 @@ class ProductUpdateSchema(Schema):
 class RecurringSchema(Schema):
     interval = fields.Str(required=True, validate=validate.OneOf(periods.INTERVALS))
     interval_count = fields.Int(missing=1)
+    usage_type = fields.Str(missing="licensed", validate=validate.OneOf(USAGE_TYPES))
+    aggregate_usage = fields.Str(allow_none=True, validate=validate.OneOf(AGGREGATIONS))
 
     @validates_schema
     def _check(self, data, **kwargs):
@@ -67,6 +70,10 @@ class RecurringSchema(Schema):
             periods.validate_interval(data["interval"], data.get("interval_count", 1))
         except ValueError as exc:
             raise ValidationError(str(exc), field_name="interval_count")
+        if data.get("aggregate_usage") and data.get("usage_type") != "metered":
+            raise ValidationError(
+                "aggregate_usage is only valid for metered prices", field_name="aggregate_usage"
+            )
 
 
 class PriceSchema(Schema):

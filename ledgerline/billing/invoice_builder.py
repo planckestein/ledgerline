@@ -3,6 +3,7 @@ from sqlalchemy import or_
 
 from ledgerline.billing import discounts, pricing
 from ledgerline.billing import tax as taxes
+from ledgerline.billing import usage
 from ledgerline.billing.periods import describe as describe_period
 from ledgerline.extensions import db
 from ledgerline.models import Invoice, InvoiceItem, InvoiceLine
@@ -44,6 +45,8 @@ def _append_line(invoice, **fields):
 def add_licensed_lines(invoice, subscription, period_start, period_end):
     """Charge licensed items in advance for ``[period_start, period_end)``."""
     for item in subscription.active_items:
+        if item.price.is_metered:
+            continue
         _append_line(
             invoice,
             line_type="subscription",
@@ -56,6 +59,26 @@ def add_licensed_lines(invoice, subscription, period_start, period_end):
             ),
             quantity=item.quantity,
             amount=pricing.amount_for_quantity(item.price, item.quantity),
+            period_start=period_start,
+            period_end=period_end,
+        )
+
+
+def add_metered_lines(invoice, subscription, period_start, period_end):
+    """Charge metered items in arrears for usage in ``[period_start, period_end)``."""
+    for item in subscription.active_items:
+        if not item.price.is_metered:
+            continue
+        quantity = usage.aggregate_usage(item, period_start, period_end)
+        _append_line(
+            invoice,
+            line_type="subscription",
+            subscription_item=item,
+            price=item.price,
+            description="%s (%s)"
+            % (pricing.describe(item.price, quantity), describe_period(period_start, period_end)),
+            quantity=quantity,
+            amount=pricing.amount_for_quantity(item.price, quantity),
             period_start=period_start,
             period_end=period_end,
         )

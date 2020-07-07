@@ -73,6 +73,8 @@ def serialize_price(price):
         "recurring": {
             "interval": price.interval,
             "interval_count": price.interval_count,
+            "usage_type": price.usage_type,
+            "aggregate_usage": price.aggregate_usage,
         },
         "active": price.active,
         "created": ts(price.created_at),
@@ -209,6 +211,16 @@ def serialize_invoice_item(item):
         "proration": item.proration,
         "period": {"start": ts(item.period_start), "end": ts(item.period_end)},
         "created": ts(item.created_at),
+    }
+
+
+def serialize_usage_record(record):
+    return {
+        "id": record.public_id,
+        "object": "usage_record",
+        "subscription_item": record.subscription_item.public_id,
+        "quantity": record.quantity,
+        "timestamp": ts(record.timestamp),
     }
 
 

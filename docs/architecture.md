@@ -18,7 +18,7 @@ worker for periodic jobs.
         +-------------------------v--------------------------+
         |                 domain services                    |
         |  billing/   subscriptions, renewal, invoice_builder, |
-        |             invoicing, discounts, tax,             |
+        |             invoicing, discounts, tax, usage,      |
         |             periods, proration, pricing            |
         |  payments/  gateway, service, dunning              |
         +-------------------------+--------------------------+

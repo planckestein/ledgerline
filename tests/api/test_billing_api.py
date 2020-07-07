@@ -32,7 +32,13 @@ class TestCatalog:
         assert price["recurring"] == {
             "interval": "month",
             "interval_count": 1,
+            "usage_type": "licensed",
+            "aggregate_usage": None,
         }
+
+    def test_metered_price_defaults_to_sum(self, api):
+        price = create_price(api, recurring={"interval": "month", "usage_type": "metered"})
+        assert price["recurring"]["aggregate_usage"] == "sum"
 
     def test_price_validation(self, api):
         product = api.post("/v1/products", json={"name": "Pro"}).get_json()
@@ -45,6 +51,10 @@ class TestCatalog:
             (dict(base, currency="xxx", recurring={"interval": "month"}), "currency"),
             (dict(base, unit_amount=-1, recurring={"interval": "month"}), "unit_amount"),
             (dict(base, billing_scheme="package", recurring={"interval": "month"}), "package_size"),
+            (
+                dict(base, recurring={"interval": "month", "aggregate_usage": "max"}),
+                "recurring.aggregate_usage",
+            ),
             (dict(base, product="prod_missing", recurring={"interval": "month"}), "product"),
         ]
         for body, param in cases:

@@ -8,6 +8,7 @@ from ledgerline.models.payment import PaymentAttempt, PaymentMethod
 from ledgerline.models.subscription import Subscription, SubscriptionItem
 from ledgerline.models.tax import TaxRate
 from ledgerline.models.tenant import ApiKey, Tenant
+from ledgerline.models.usage import UsageRecord
 
 __all__ = [
     "ApiKey",
@@ -25,4 +26,5 @@ __all__ = [
     "SubscriptionItem",
     "TaxRate",
     "Tenant",
+    "UsageRecord",
 ]

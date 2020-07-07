@@ -2,8 +2,8 @@
 
 Ledgerline is a multi-tenant **subscription billing service**: merchants
 (tenants) define products and recurring prices, subscribe their customers, and
-Ledgerline takes care of billing periods, prorations, coupons, tax, invoices
-and card payments with dunning.
+Ledgerline takes care of billing periods, prorations, coupons, tax, metered
+usage, invoices and card payments with dunning.
 
 It is a Python 3.8 / Flask 1.1 / SQLAlchemy 1.3 application with Alembic
 migrations, Celery workers and a PostgreSQL database.
@@ -11,7 +11,7 @@ migrations, Celery workers and a PostgreSQL database.
 ## Features
 
 * **Catalog** – products and recurring prices (per-unit or package pricing,
-  day/week/month/year intervals).
+  licensed or metered, day/week/month/year intervals).
 * **Subscriptions** – trials, quantity and price changes with second-precise
   prorations, cancellation now or at period end, automatic renewals.
 * **Invoices** – draft → open → paid/void/uncollectible state machine,
@@ -20,6 +20,8 @@ migrations, Celery workers and a PostgreSQL database.
   `forever`) allocated across invoice lines without losing a cent.
 * **Tax** – exclusive/inclusive rates by country and state, EU reverse charge,
   tax-exempt customers, correct rounding for 0-, 2- and 3-decimal currencies.
+* **Usage-based billing** – usage records aggregated by `sum`, `max` or
+  `last_during_period`, billed in arrears.
 * **Payments** – pluggable gateway (a deterministic fake gateway ships for
   development), configurable retry schedule and final action.
 * **API** – JSON REST API with API-key auth, cursor pagination and uniform

@@ -25,12 +25,16 @@ def _has_pending_items(subscription):
 
 def _end_subscription(subscription, now):
     """Handle ``cancel_at_period_end`` once the period is over."""
+    period = (subscription.current_period_start, subscription.current_period_end)
+    was_trialing = subscription.status == "trialing"
+    has_metered = any(item.price.is_metered for item in subscription.active_items)
 
     invoice = None
-    if _has_pending_items(subscription):
+    if (has_metered and not was_trialing) or _has_pending_items(subscription):
         invoice = _cycle_invoice(
             subscription,
             "subscription_cancel",
+            metered_period=None if was_trialing else period,
         )
         finalize_and_collect(invoice)
 
@@ -45,6 +49,7 @@ def _renew_once(subscription, now):
         return _end_subscription(subscription, now)
 
     was_trialing = subscription.status == "trialing"
+    ended_period = (subscription.current_period_start, subscription.current_period_end)
     price = subscription.primary_price
     new_start, new_end = periods.next_period(
         subscription.current_period_end, price.interval, price.interval_count
@@ -58,6 +63,7 @@ def _renew_once(subscription, now):
         subscription,
         "subscription_cycle",
         licensed_period=(new_start, new_end),
+        metered_period=None if was_trialing else ended_period,
     )
     finalize_and_collect(invoice)
     return invoice

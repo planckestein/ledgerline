@@ -4,6 +4,7 @@ import pytest
 
 from ledgerline.billing import invoicing
 from ledgerline.billing import subscriptions as service
+from ledgerline.billing import usage
 from ledgerline.billing.renewal import run_billing_cycle
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition
 from ledgerline.models import Invoice, InvoiceItem
@@ -197,6 +198,14 @@ class TestChangeItems:
         service.update_subscription_items(sub, [(price, 5)])
         assert pending_items(customer) == []
 
+    def test_metered_items_are_not_prorated(self, tenant, clock):
+        customer = factories.customer(tenant)
+        metered = factories.price(tenant, unit_amount=5, usage_type="metered")
+        sub = factories.subscribe(customer, metered)
+        clock.set(JUN_16)
+        service.update_subscription_items(sub, [(metered, 1), (factories.price(tenant), 1)])
+        assert [i.amount for i in pending_items(customer)] == [500]
+
     def test_cannot_update_canceled_subscription(self, tenant):
         customer = factories.customer(tenant)
         price = factories.price(tenant)
@@ -219,6 +228,20 @@ class TestCancel:
         assert sub.ended_at == JUL_1
         assert len(invoices_of(sub)) == 1
 
+    def test_cancel_at_period_end_bills_outstanding_usage(self, tenant, clock):
+        customer = factories.customer(tenant)
+        metered = factories.price(tenant, unit_amount=5, usage_type="metered")
+        sub = factories.subscribe(customer, metered)
+        usage.record_usage(sub.active_items[0], 40)
+        service.schedule_cancellation(sub)
+
+        clock.set(JUL_1)
+        run_billing_cycle()
+        final = invoices_of(sub)[-1]
+        assert final.billing_reason == "subscription_cancel"
+        assert final.total == 200
+        assert sub.status == "canceled"
+
     def test_cancel_immediately_with_proration(self, tenant, clock):
         customer = factories.customer(tenant)
         sub = factories.subscribe(customer, factories.price(tenant, unit_amount=1000))
@@ -227,6 +250,17 @@ class TestCancel:
         assert sub.status == "canceled"
         assert sub.ended_at == JUN_16
         assert [i.amount for i in pending_items(customer)] == [-500]
+
+    def test_cancel_with_invoice_now_bills_usage(self, tenant, clock):
+        customer = factories.customer(tenant)
+        metered = factories.price(tenant, unit_amount=10, usage_type="metered")
+        sub = factories.subscribe(customer, metered)
+        usage.record_usage(sub.active_items[0], 7)
+        clock.set(JUN_16)
+        service.cancel_subscription(sub, invoice_now=True)
+        final = invoices_of(sub)[-1]
+        assert final.total == 70
+        assert final.status == "paid"
 
     def test_negative_final_invoice_keeps_credit_pending(self, tenant, clock):
         customer = factories.customer(tenant)

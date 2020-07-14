@@ -135,6 +135,28 @@ class TestSubscriptions:
         )
         assert response.status_code == 404
 
+    def test_usage_records(self, api):
+        customer = create_customer(api)
+        price = create_price(
+            api, unit_amount=3, recurring={"interval": "month", "usage_type": "metered"}
+        )
+        sub = api.post(
+            "/v1/subscriptions",
+            json={"customer": customer["id"], "items": [{"price": price["id"]}]},
+        ).get_json()
+        item_id = sub["items"]["data"][0]["id"]
+        response = api.post(
+            "/v1/subscription_items/%s/usage_records" % item_id, json={"quantity": 12}
+        )
+        assert response.status_code == 201
+        response = api.post(
+            "/v1/subscription_items/%s/usage_records" % item_id,
+            json={"quantity": 1, "timestamp": 946684800},
+        )
+        assert response.get_json()["error"]["param"] == "timestamp"
+        summary = api.get("/v1/subscription_items/%s/usage_summary" % item_id).get_json()
+        assert summary["total_usage"] == 12
+
 
 class TestInvoices:
     def test_manual_invoice_flow(self, api):

@@ -201,3 +201,8 @@ class InvoiceCreateSchema(Schema):
 
 class InvoicePaySchema(Schema):
     paid_out_of_band = fields.Bool(missing=False)
+
+
+class UsageRecordSchema(Schema):
+    quantity = fields.Int(required=True, validate=validate.Range(min=0))
+    timestamp = fields.Int()

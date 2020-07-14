@@ -38,6 +38,8 @@ lower-case ISO 4217 codes.
 | `POST/GET /coupons`, `GET /coupons/:id` | coupons |
 | `POST/GET /subscriptions`, `GET/POST /subscriptions/:id` | subscriptions; update `items`, `proration_behavior`, `cancel_at_period_end` |
 | `POST /subscriptions/:id/cancel` | cancel now (`prorate`, `invoice_now`) |
+| `POST /subscription_items/:id/usage_records` | report metered usage |
+| `GET /subscription_items/:id/usage_summary` | usage in the current period |
 | `POST/GET /invoiceitems` | one-off charges and credits |
 | `POST /invoices`, `GET /invoices`, `GET /invoices/:id` | manual draft invoices, listing |
 | `POST /invoices/:id/finalize` \| `pay` \| `void` \| `mark_uncollectible` | invoice lifecycle |

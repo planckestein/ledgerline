@@ -47,7 +47,7 @@ def aggregate_usage(item, period_start, period_end):
     query = UsageRecord.query.filter(
         UsageRecord.subscription_item_id == item.id,
         UsageRecord.timestamp >= period_start,
-        UsageRecord.timestamp <= period_end,
+        UsageRecord.timestamp < period_end,
     )
     mode = item.price.aggregate_usage or "sum"
     if mode == "sum":

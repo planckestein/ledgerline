@@ -94,6 +94,21 @@ def test_metered_usage_is_billed_in_arrears(tenant, clock):
     assert invoice.total == 1150
 
 
+def test_usage_exactly_at_period_end_belongs_to_next_period(tenant, clock):
+    customer = factories.customer(tenant)
+    metered = factories.price(tenant, unit_amount=1, usage_type="metered")
+    sub = factories.subscribe(customer, metered)
+    item = sub.active_items[0]
+    usage.record_usage(item, 3, timestamp=JUL_1 - timedelta(microseconds=1))
+    with pytest.raises(InvalidRequestError):
+        usage.record_usage(item, 4, timestamp=JUL_1)
+    clock.set(JUL_1)
+    run_billing_cycle()
+    usage.record_usage(item, 4, timestamp=JUL_1)
+    assert usage.aggregate_usage(item, JUN_1, JUL_1) == 3
+    assert usage.aggregate_usage(item, JUL_1, AUG_1) == 4
+
+
 @pytest.mark.parametrize("mode,expected", [("sum", 17), ("max", 9), ("last_during_period", 3)])
 def test_usage_aggregation_modes(tenant, clock, mode, expected):
     customer = factories.customer(tenant)

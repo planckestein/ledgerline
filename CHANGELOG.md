@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. The project follows
 semantic versioning.
 
+## 1.2.0
+
+### Added
+- Tax rates (exclusive and inclusive), EU reverse charge, tax-exempt customers.
+- Metered prices and usage records (`sum`, `max`, `last_during_period`).
+
 ## 1.1.0
 
 ### Added

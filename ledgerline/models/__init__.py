@@ -4,6 +4,7 @@ from ledgerline.models.catalog import Price, Product
 from ledgerline.models.coupon import Coupon, Discount
 from ledgerline.models.customer import Customer
 from ledgerline.models.invoice import Invoice, InvoiceItem, InvoiceLine
+from ledgerline.models.ledger import JournalEntry, JournalLine
 from ledgerline.models.payment import PaymentAttempt, PaymentMethod
 from ledgerline.models.subscription import Subscription, SubscriptionItem
 from ledgerline.models.tax import TaxRate
@@ -18,6 +19,8 @@ __all__ = [
     "Invoice",
     "InvoiceItem",
     "InvoiceLine",
+    "JournalEntry",
+    "JournalLine",
     "PaymentAttempt",
     "PaymentMethod",
     "Price",

@@ -21,6 +21,7 @@ worker for periodic jobs.
         |             invoicing, discounts, tax, usage,      |
         |             periods, proration, pricing            |
         |  payments/  gateway, service, dunning              |
+        |  ledger/    posting, reports                       |
         +-------------------------+--------------------------+
                                   |
                        ledgerline.models (SQLAlchemy)
@@ -37,6 +38,7 @@ worker for periodic jobs.
 | `ledgerline.models` | SQLAlchemy models; no business logic beyond small properties |
 | `ledgerline.billing` | periods, pricing, prorations, discounts, tax, invoice assembly and lifecycle, subscription lifecycle, renewals |
 | `ledgerline.payments` | gateway adapters (`fake` for dev/test), collection, dunning |
+| `ledgerline.ledger` | double-entry postings and reports |
 | `ledgerline.api.serializers` | public JSON representations of API resources |
 | `ledgerline.api` | Flask blueprint: authentication, validation, pagination, resources |
 | `ledgerline.tasks` | Celery app and periodic jobs |

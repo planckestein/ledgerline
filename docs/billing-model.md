@@ -120,7 +120,20 @@ Invoice states: `draft → open → paid`, `draft|open → void`,
 `open → uncollectible → paid`. Any other transition raises
 `InvalidStateTransition` (HTTP 409).
 
-## 6. Payments and dunning
+## 6. Ledger postings
+
+See [ADR 0003](adr/0003-double-entry-ledger.md). Every entry balances; an
+unbalanced entry raises `LedgerImbalanceError`, aborting the transaction.
+
+| event                | debit                          | credit                              |
+|----------------------|--------------------------------|-------------------------------------|
+| invoice finalized    | AR `total`                     | revenue `Σ(net − inclusive tax)`, tax payable `tax_total` |
+| payment              | cash                           | AR                                  |
+| invoice voided       | revenue, tax payable           | AR                                  |
+| marked uncollectible | bad debt                       | AR                                  |
+| write-off recovered  | AR                             | bad debt                            |
+
+## 7. Payments and dunning
 
 Automatic collection charges the customer's default payment method once when
 an invoice is finalized. On failure the tenant's `dunning_retry_days`
@@ -129,7 +142,7 @@ the last retry `dunning_final_action` cancels the subscription (invoice →
 uncollectible) or marks it `unpaid`. The first invoice of a subscription is
 not retried; the subscription stays `incomplete` until it is paid.
 
-## 7. API conventions
+## 8. API conventions
 
 **Pagination.** Lists are ordered newest first by `(created_at, id)`. The
 order is total: objects created in the same instant (bulk imports, frozen

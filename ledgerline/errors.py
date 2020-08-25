@@ -54,3 +54,11 @@ class InvoiceError(InvalidRequestError):
 class CardError(LedgerlineError):
     status_code = 402
     error_type = "card_error"
+
+
+class LedgerImbalanceError(LedgerlineError):
+    """Raised when a journal entry does not balance. Always a programming error."""
+
+    status_code = 500
+    error_type = "api_error"
+    default_code = "ledger_imbalance"

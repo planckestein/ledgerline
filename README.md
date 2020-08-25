@@ -3,7 +3,7 @@
 Ledgerline is a multi-tenant **subscription billing service**: merchants
 (tenants) define products and recurring prices, subscribe their customers, and
 Ledgerline takes care of billing periods, prorations, coupons, tax, metered
-usage, invoices and card payments with dunning.
+usage, invoices, card payments with dunning and a double-entry ledger.
 
 It is a Python 3.8 / Flask 1.1 / SQLAlchemy 1.3 application with Alembic
 migrations, Celery workers and a PostgreSQL database.
@@ -103,6 +103,7 @@ ledgerline/
   api/          Flask blueprint: auth, schemas, pagination, resources
   billing/      periods, pricing, proration, discounts, tax, invoices, subscriptions
   payments/     gateway adapters, collection, dunning
+  ledger/       journal postings and reports
   models/       SQLAlchemy models
   tasks/        Celery app and jobs
 migrations/     Alembic revisions

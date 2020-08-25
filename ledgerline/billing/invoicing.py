@@ -5,6 +5,9 @@ State machine::
     draft --finalize--> open --pay--> paid
       |                   |  \\
       +--void--> void <---+   +--mark_uncollectible--> uncollectible --pay--> paid
+
+Every transition that changes what the customer owes posts a journal entry
+(see ledgerline.ledger.posting) in the same transaction.
 """
 from datetime import timedelta
 
@@ -12,6 +15,7 @@ from ledgerline import clock
 from ledgerline.billing import discounts, invoice_builder
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition, InvoiceError
 from ledgerline.extensions import db
+from ledgerline.ledger import posting
 from ledgerline.models import Customer, InvoiceItem
 
 ALLOWED_TRANSITIONS = {
@@ -84,18 +88,24 @@ def finalize_invoice(invoice):
     discounts.close_once_discount(discount, now)
     db.session.flush()
 
+    posting.post_invoice_finalized(invoice)
     if invoice.total == 0:
         mark_paid(invoice, amount=0)
     return invoice
 
 
 def mark_paid(invoice, amount, attempt=None, out_of_band=False):
+    was_uncollectible = invoice.status == "uncollectible"
     _transition(invoice, "paid")
     now = clock.utcnow()
     invoice.amount_paid += amount
     invoice.amount_due = 0
     invoice.paid_at = now
     invoice.next_payment_attempt = None
+    if amount:
+        posting.post_payment(
+            invoice, amount, out_of_band=out_of_band, recover_write_off=was_uncollectible
+        )
 
     subscription = invoice.subscription
     if subscription is not None and subscription.status in REACTIVATING_STATUSES:
@@ -124,7 +134,9 @@ def void_invoice(invoice):
     invoice.voided_at = clock.utcnow()
     invoice.next_payment_attempt = None
     invoice.amount_due = 0
-    if not was_finalized:
+    if was_finalized:
+        posting.post_invoice_voided(invoice)
+    else:
         # A voided draft never existed for the customer: give its items back.
         for item in InvoiceItem.query.filter_by(invoice_id=invoice.id).all():
             item.invoice = None
@@ -135,4 +147,5 @@ def mark_uncollectible(invoice):
     _transition(invoice, "uncollectible")
     invoice.marked_uncollectible_at = clock.utcnow()
     invoice.next_payment_attempt = None
+    posting.post_write_off(invoice, invoice.amount_due)
     return invoice

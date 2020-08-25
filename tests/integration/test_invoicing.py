@@ -5,6 +5,7 @@ import pytest
 from ledgerline.billing import invoicing
 from ledgerline.billing.renewal import run_billing_cycle
 from ledgerline.errors import InvalidStateTransition, InvoiceError
+from ledgerline.ledger import accounts, reports
 from ledgerline.models import Invoice, InvoiceItem
 from tests.support import factories
 
@@ -13,6 +14,10 @@ def manual_invoice(customer, *amounts, **kwargs):
     for amount in amounts:
         factories.invoice_item(customer, amount)
     return invoicing.create_manual_invoice(customer, **kwargs)
+
+
+def balances(tenant, currency="eur"):
+    return reports.account_balances(tenant.id, currency)
 
 
 class TestLifecycle:
@@ -27,11 +32,14 @@ class TestLifecycle:
         invoicing.finalize_invoice(invoice)
         assert invoice.status == "open"
         assert invoice.number == "%s-0001" % customer.invoice_prefix
+        assert balances(tenant)[accounts.ACCOUNTS_RECEIVABLE] == 4000
 
         invoicing.pay_invoice(invoice)
         assert invoice.status == "paid"
         assert invoice.amount_paid == 4000
         assert invoice.amount_due == 0
+        assert balances(tenant)[accounts.ACCOUNTS_RECEIVABLE] == 0
+        assert balances(tenant)[accounts.CASH] == 4000
 
     def test_numbers_are_sequential_per_customer(self, tenant):
         first = factories.customer(tenant)
@@ -65,11 +73,13 @@ class TestLifecycle:
         assert invoice.status == "paid"
         assert gateway.charges == []
 
-    def test_void_open_invoice(self, tenant):
+    def test_void_open_invoice_reverses_ledger(self, tenant):
         invoice = manual_invoice(factories.customer(tenant), 1000)
         invoicing.finalize_invoice(invoice)
         invoicing.void_invoice(invoice)
         assert invoice.status == "void"
+        assert balances(tenant)[accounts.ACCOUNTS_RECEIVABLE] == 0
+        assert balances(tenant)[accounts.REVENUE] == 0
 
     def test_void_draft_releases_items(self, tenant):
         customer = factories.customer(tenant)
@@ -89,9 +99,14 @@ class TestLifecycle:
         invoice = manual_invoice(factories.customer(tenant), 1000)
         invoicing.finalize_invoice(invoice)
         invoicing.mark_uncollectible(invoice)
+        assert balances(tenant)[accounts.BAD_DEBT] == 1000
+        assert balances(tenant)[accounts.ACCOUNTS_RECEIVABLE] == 0
 
         invoicing.pay_invoice(invoice)
         assert invoice.status == "paid"
+        assert balances(tenant)[accounts.BAD_DEBT] == 0
+        assert balances(tenant)[accounts.CASH] == 1000
+        assert balances(tenant)[accounts.ACCOUNTS_RECEIVABLE] == 0
 
     def test_paid_out_of_band_does_not_charge(self, tenant, gateway):
         invoice = manual_invoice(factories.customer(tenant), 1000)
@@ -120,6 +135,8 @@ class TestTotals:
         invoice = manual_invoice(factories.customer(tenant), 1190)
         assert (invoice.subtotal, invoice.tax_total, invoice.total) == (1190, 190, 1190)
         invoicing.finalize_invoice(invoice)
+        assert balances(tenant)[accounts.REVENUE] == -1000
+        assert balances(tenant)[accounts.TAX_PAYABLE] == -190
 
     def test_tax_is_computed_after_discount(self, tenant):
         factories.tax_rate(tenant, "19", country="DE")

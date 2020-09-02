@@ -15,6 +15,7 @@ def register_api(app):
         customers,
         errors,
         invoices,
+        ledger,
         subscriptions,
         tax_rates,
         usage,

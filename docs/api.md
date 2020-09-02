@@ -44,3 +44,4 @@ lower-case ISO 4217 codes.
 | `POST /invoices`, `GET /invoices`, `GET /invoices/:id` | manual draft invoices, listing |
 | `POST /invoices/:id/finalize` \| `pay` \| `void` \| `mark_uncollectible` | invoice lifecycle |
 | `GET /invoices/:id/payment_attempts` | charge attempts |
+| `GET /ledger/trial_balance?currency=eur` | ledger trial balance |

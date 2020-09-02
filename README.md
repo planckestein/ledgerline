@@ -24,6 +24,8 @@ migrations, Celery workers and a PostgreSQL database.
   `last_during_period`, billed in arrears.
 * **Payments** – pluggable gateway (a deterministic fake gateway ships for
   development), configurable retry schedule and final action.
+* **Ledger** – every money movement posts a balanced journal entry; trial
+  balance endpoint.
 * **API** – JSON REST API with API-key auth, cursor pagination and uniform
   errors.
 

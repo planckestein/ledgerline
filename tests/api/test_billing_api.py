@@ -184,6 +184,10 @@ class TestInvoices:
         attempts = api.get("/v1/invoices/%s/payment_attempts" % invoice["id"]).get_json()
         assert [a["status"] for a in attempts["data"]] == ["succeeded"]
 
+        balance = api.get("/v1/ledger/trial_balance", currency="eur").get_json()
+        assert balance["balanced"] is True
+        assert {row["account"]: row["balance"] for row in balance["accounts"]}["1000_cash"] == 4000
+
     def test_declined_payment_returns_402(self, api):
         customer = create_customer(api, token="tok_chargeDeclined")
         api.post(

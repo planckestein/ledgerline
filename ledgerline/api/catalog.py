@@ -10,9 +10,9 @@ from ledgerline.api.schemas import (
     ProductSchema,
     ProductUpdateSchema,
 )
-from ledgerline.api.serializers import serialize_price, serialize_product
 from ledgerline.extensions import db
 from ledgerline.models import Price, Product
+from ledgerline.serializers import serialize_price, serialize_product
 
 
 @api_bp.route("/products", methods=["POST"])

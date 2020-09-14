@@ -5,12 +5,12 @@ from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import CustomerDiscountSchema, CustomerSchema, PaymentMethodSchema
-from ledgerline.api.serializers import serialize_customer, serialize_payment_method
 from ledgerline.billing import discounts
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
 from ledgerline.models import Coupon, Customer, PaymentMethod
 from ledgerline.payments import service as payment_service
+from ledgerline.serializers import serialize_customer, serialize_payment_method
 
 
 def _apply_fields(customer, data):

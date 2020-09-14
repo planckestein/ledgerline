@@ -39,7 +39,7 @@ worker for periodic jobs.
 | `ledgerline.billing` | periods, pricing, prorations, discounts, tax, invoice assembly and lifecycle, subscription lifecycle, renewals |
 | `ledgerline.payments` | gateway adapters (`fake` for dev/test), collection, dunning |
 | `ledgerline.ledger` | double-entry postings and reports |
-| `ledgerline.api.serializers` | public JSON representations of API resources |
+| `ledgerline.serializers` | public JSON representations (shared by API and events) |
 | `ledgerline.api` | Flask blueprint: authentication, validation, pagination, resources |
 | `ledgerline.tasks` | Celery app and periodic jobs |
 | `ledgerline.cli` | operator commands (`flask tenants ...`, `flask billing ...`) |

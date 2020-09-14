@@ -5,9 +5,9 @@ from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import CouponSchema
-from ledgerline.api.serializers import serialize_coupon
 from ledgerline.extensions import db
 from ledgerline.models import Coupon
+from ledgerline.serializers import serialize_coupon
 
 
 @api_bp.route("/coupons", methods=["POST"])

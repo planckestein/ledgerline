@@ -9,10 +9,10 @@ from ledgerline.api.schemas import (
     SubscriptionCreateSchema,
     SubscriptionUpdateSchema,
 )
-from ledgerline.api.serializers import serialize_subscription
 from ledgerline.billing import subscriptions as service
 from ledgerline.extensions import db
 from ledgerline.models import Coupon, Customer, Price, Subscription
+from ledgerline.serializers import serialize_subscription
 
 
 def _resolve_items(raw_items):

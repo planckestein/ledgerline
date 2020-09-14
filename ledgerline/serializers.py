@@ -1,9 +1,11 @@
 """Public JSON representations of domain objects.
 
-Changing a representation is an API change. Timestamps are Unix seconds;
-money is in minor units.
+Used by the REST API and by event payloads, so changing a representation is
+an API change. Timestamps are Unix seconds; money is in minor units.
 """
 import calendar
+
+from ledgerline import models
 
 
 def ts(moment):
@@ -236,3 +238,27 @@ def serialize_payment_attempt(attempt):
         "failure_message": attempt.failure_message,
         "created": ts(attempt.created_at),
     }
+
+
+SERIALIZERS = {
+    models.Customer: serialize_customer,
+    models.PaymentMethod: serialize_payment_method,
+    models.Product: serialize_product,
+    models.Price: serialize_price,
+    models.TaxRate: serialize_tax_rate,
+    models.Coupon: serialize_coupon,
+    models.Subscription: serialize_subscription,
+    models.SubscriptionItem: serialize_subscription_item,
+    models.Invoice: serialize_invoice,
+    models.InvoiceItem: serialize_invoice_item,
+    models.UsageRecord: serialize_usage_record,
+    models.PaymentAttempt: serialize_payment_attempt,
+}
+
+
+def serialize(obj):
+    try:
+        serializer = SERIALIZERS[type(obj)]
+    except KeyError:
+        raise TypeError("No serializer registered for %s" % type(obj).__name__)
+    return serializer(obj)

@@ -4,10 +4,10 @@ from flask import jsonify
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import from_timestamp, get_or_404, load
 from ledgerline.api.schemas import UsageRecordSchema
-from ledgerline.api.serializers import serialize_usage_record
 from ledgerline.billing import usage
 from ledgerline.extensions import db
 from ledgerline.models import SubscriptionItem
+from ledgerline.serializers import serialize_usage_record
 
 
 @api_bp.route("/subscription_items/<item_id>/usage_records", methods=["POST"])

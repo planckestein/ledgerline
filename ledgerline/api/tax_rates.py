@@ -5,10 +5,10 @@ from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import TaxRateSchema, TaxRateUpdateSchema
-from ledgerline.api.serializers import serialize_tax_rate
 from ledgerline.extensions import db
 from ledgerline.geo import normalize_country
 from ledgerline.models import TaxRate
+from ledgerline.serializers import serialize_tax_rate
 
 
 @api_bp.route("/tax_rates", methods=["POST"])

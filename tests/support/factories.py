@@ -8,7 +8,17 @@ from decimal import Decimal
 from ledgerline.billing import discounts, subscriptions
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
-from ledgerline.models import ApiKey, Coupon, Customer, InvoiceItem, Price, Product, TaxRate, Tenant
+from ledgerline.models import (
+    ApiKey,
+    Coupon,
+    Customer,
+    InvoiceItem,
+    Price,
+    Product,
+    TaxRate,
+    Tenant,
+    WebhookEndpoint,
+)
 from ledgerline.payments import service as payment_service
 
 _counter = itertools.count(1)
@@ -164,6 +174,19 @@ def invoice_item(customer, amount, description="One-off charge", currency=None, 
         amount=amount,
         currency=currency,
         description=description,
+    )
+    db.session.add(obj)
+    db.session.flush()
+    return obj
+
+
+def webhook_endpoint(tenant, events=("*",), url="https://hooks.example.com/ledgerline"):
+    obj = WebhookEndpoint(
+        tenant_id=tenant.id,
+        url=url,
+        secret="whsec_test_secret",
+        enabled_events=list(events),
+        active=True,
     )
     db.session.add(obj)
     db.session.flush()

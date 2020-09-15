@@ -3,6 +3,7 @@ from ledgerline.models.base import generate_public_id  # noqa: F401
 from ledgerline.models.catalog import Price, Product
 from ledgerline.models.coupon import Coupon, Discount
 from ledgerline.models.customer import Customer
+from ledgerline.models.events import Event, WebhookDelivery, WebhookEndpoint
 from ledgerline.models.invoice import Invoice, InvoiceItem, InvoiceLine
 from ledgerline.models.ledger import JournalEntry, JournalLine
 from ledgerline.models.payment import PaymentAttempt, PaymentMethod
@@ -16,6 +17,7 @@ __all__ = [
     "Coupon",
     "Customer",
     "Discount",
+    "Event",
     "Invoice",
     "InvoiceItem",
     "InvoiceLine",
@@ -30,4 +32,6 @@ __all__ = [
     "TaxRate",
     "Tenant",
     "UsageRecord",
+    "WebhookDelivery",
+    "WebhookEndpoint",
 ]

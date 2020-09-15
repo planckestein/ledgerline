@@ -92,7 +92,7 @@ The suite is organised as `tests/unit` (pure functions), `tests/integration`
 
 ## Documentation
 
-* [docs/architecture.md](docs/architecture.md) – packages and transactions
+* [docs/architecture.md](docs/architecture.md) – packages, transactions, outbox
 * [docs/billing-model.md](docs/billing-model.md) – **the billing specification**
 * [docs/api.md](docs/api.md) – API reference
 * [docs/adr](docs/adr) – architecture decision records
@@ -106,6 +106,7 @@ ledgerline/
   billing/      periods, pricing, proration, discounts, tax, invoices, subscriptions
   payments/     gateway adapters, collection, dunning
   ledger/       journal postings and reports
+  events/       outbox and webhooks
   models/       SQLAlchemy models
   tasks/        Celery app and jobs
 migrations/     Alembic revisions

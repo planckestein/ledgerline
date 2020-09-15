@@ -22,6 +22,7 @@ worker for periodic jobs.
         |             periods, proration, pricing            |
         |  payments/  gateway, service, dunning              |
         |  ledger/    posting, reports                       |
+        |  events/    bus (outbox), webhooks                 |
         +-------------------------+--------------------------+
                                   |
                        ledgerline.models (SQLAlchemy)
@@ -39,6 +40,7 @@ worker for periodic jobs.
 | `ledgerline.billing` | periods, pricing, prorations, discounts, tax, invoice assembly and lifecycle, subscription lifecycle, renewals |
 | `ledgerline.payments` | gateway adapters (`fake` for dev/test), collection, dunning |
 | `ledgerline.ledger` | double-entry postings and reports |
+| `ledgerline.events` | transactional outbox and signed webhook delivery |
 | `ledgerline.serializers` | public JSON representations (shared by API and events) |
 | `ledgerline.api` | Flask blueprint: authentication, validation, pagination, resources |
 | `ledgerline.tasks` | Celery app and periodic jobs |
@@ -54,6 +56,12 @@ services never import from `api`.
 * **Jobs commit per unit of work** (one subscription, one invoice) so that
   one bad record cannot block the run.
 * Error handlers roll the session back before rendering an error.
+
+## Domain events and webhooks
+
+`events.bus.publish()` inserts an `Event` and one `WebhookDelivery` per
+subscribed endpoint inside the current transaction (transactional outbox,
+[ADR 0002](adr/0002-transactional-outbox.md)).
 
 ## Multi-tenancy
 

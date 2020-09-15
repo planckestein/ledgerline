@@ -7,13 +7,14 @@ State machine::
       +--void--> void <---+   +--mark_uncollectible--> uncollectible --pay--> paid
 
 Every transition that changes what the customer owes posts a journal entry
-(see ledgerline.ledger.posting) in the same transaction.
+(see ledgerline.ledger.posting) and publishes an event in the same transaction.
 """
 from datetime import timedelta
 
 from ledgerline import clock
 from ledgerline.billing import discounts, invoice_builder
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition, InvoiceError
+from ledgerline.events import bus
 from ledgerline.extensions import db
 from ledgerline.ledger import posting
 from ledgerline.models import Customer, InvoiceItem
@@ -54,6 +55,7 @@ def create_manual_invoice(customer, collection_method="charge_automatically", da
         raise InvalidRequestError("Customer has no pending invoice items", param="customer")
     invoice_builder.compute_totals(invoice)
     db.session.flush()
+    bus.publish("invoice.created", invoice)
     return invoice
 
 
@@ -89,6 +91,7 @@ def finalize_invoice(invoice):
     db.session.flush()
 
     posting.post_invoice_finalized(invoice)
+    bus.publish("invoice.finalized", invoice)
     if invoice.total == 0:
         mark_paid(invoice, amount=0)
     return invoice
@@ -110,6 +113,8 @@ def mark_paid(invoice, amount, attempt=None, out_of_band=False):
     subscription = invoice.subscription
     if subscription is not None and subscription.status in REACTIVATING_STATUSES:
         subscription.status = "active"
+        bus.publish("customer.subscription.updated", subscription)
+    bus.publish("invoice.paid", invoice)
     return invoice
 
 
@@ -140,6 +145,7 @@ def void_invoice(invoice):
         # A voided draft never existed for the customer: give its items back.
         for item in InvoiceItem.query.filter_by(invoice_id=invoice.id).all():
             item.invoice = None
+    bus.publish("invoice.voided", invoice)
     return invoice
 
 
@@ -148,4 +154,5 @@ def mark_uncollectible(invoice):
     invoice.marked_uncollectible_at = clock.utcnow()
     invoice.next_payment_attempt = None
     posting.post_write_off(invoice, invoice.amount_due)
+    bus.publish("invoice.marked_uncollectible", invoice)
     return invoice

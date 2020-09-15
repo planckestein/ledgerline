@@ -6,6 +6,7 @@ from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import CustomerDiscountSchema, CustomerSchema, PaymentMethodSchema
 from ledgerline.billing import discounts
+from ledgerline.events import bus
 from ledgerline.extensions import db
 from ledgerline.geo import serialize_address
 from ledgerline.models import Coupon, Customer, PaymentMethod
@@ -35,6 +36,7 @@ def create_customer():
     customer = Customer(tenant_id=g.tenant.id, tax_exempt=False)
     _apply_fields(customer, data)
     db.session.add(customer)
+    bus.publish("customer.created", customer)
     db.session.commit()
     return jsonify(serialize_customer(customer)), 201
 
@@ -57,6 +59,7 @@ def update_customer(customer_id):
     customer = get_or_404(Customer, customer_id)
     data = load(CustomerSchema(partial=True))
     _apply_fields(customer, data)
+    bus.publish("customer.updated", customer)
     db.session.commit()
     return jsonify(serialize_customer(customer))
 

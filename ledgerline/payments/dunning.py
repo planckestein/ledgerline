@@ -14,6 +14,7 @@ import logging
 from datetime import timedelta
 
 from ledgerline import clock
+from ledgerline.events import bus
 from ledgerline.extensions import db
 from ledgerline.models import Invoice
 
@@ -44,6 +45,7 @@ def handle_payment_failure(invoice, attempt, now):
     from ledgerline.billing import invoicing
 
     subscription = invoice.subscription
+    bus.publish("invoice.payment_failed", invoice)
 
     if invoice.billing_reason == "subscription_create" and subscription is not None:
         subscription.status = "incomplete"
@@ -59,6 +61,7 @@ def handle_payment_failure(invoice, attempt, now):
         invoice.next_payment_attempt = now + timedelta(days=schedule[retries_used])
         if subscription is not None and subscription.status in ("active", "trialing"):
             subscription.status = "past_due"
+            bus.publish("customer.subscription.updated", subscription)
         return
 
     invoice.next_payment_attempt = None
@@ -66,11 +69,13 @@ def handle_payment_failure(invoice, attempt, now):
         return
     if tenant.dunning_final_action == "mark_unpaid":
         subscription.status = "unpaid"
+        bus.publish("customer.subscription.updated", subscription)
     else:
         subscription.status = "canceled"
         subscription.canceled_at = now
         subscription.ended_at = now
         invoicing.mark_uncollectible(invoice)
+        bus.publish("customer.subscription.deleted", subscription)
 
 
 def due_invoice_ids(now):

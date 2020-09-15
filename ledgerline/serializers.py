@@ -240,6 +240,30 @@ def serialize_payment_attempt(attempt):
     }
 
 
+def serialize_webhook_endpoint(endpoint, include_secret=False):
+    body = {
+        "id": endpoint.public_id,
+        "object": "webhook_endpoint",
+        "url": endpoint.url,
+        "enabled_events": endpoint.enabled_events,
+        "active": endpoint.active,
+        "created": ts(endpoint.created_at),
+    }
+    if include_secret:
+        body["secret"] = endpoint.secret
+    return body
+
+
+def serialize_event(event):
+    return {
+        "id": event.public_id,
+        "object": "event",
+        "type": event.type,
+        "data": event.payload,
+        "created": ts(event.created_at),
+    }
+
+
 SERIALIZERS = {
     models.Customer: serialize_customer,
     models.PaymentMethod: serialize_payment_method,
@@ -253,6 +277,8 @@ SERIALIZERS = {
     models.InvoiceItem: serialize_invoice_item,
     models.UsageRecord: serialize_usage_record,
     models.PaymentAttempt: serialize_payment_attempt,
+    models.WebhookEndpoint: serialize_webhook_endpoint,
+    models.Event: serialize_event,
 }
 
 

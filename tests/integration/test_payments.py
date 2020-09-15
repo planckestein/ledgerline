@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from ledgerline.billing.renewal import run_billing_cycle
-from ledgerline.models import Invoice, PaymentAttempt
+from ledgerline.models import Event, Invoice, PaymentAttempt
 from ledgerline.payments import service as payments
 from ledgerline.payments.dunning import retry_due_payments
 from tests.support import factories
@@ -74,6 +74,13 @@ def test_each_attempt_uses_a_distinct_gateway_idempotency_key(tenant, clock, gat
     keys = [a.idempotency_key for a in PaymentAttempt.query.filter_by(invoice_id=invoice.id)]
     assert keys == ["%s:attempt:1" % invoice.public_id, "%s:attempt:2" % invoice.public_id]
     assert len({charge["idempotency_key"] for charge in gateway.charges}) == len(gateway.charges)
+
+
+def test_failure_publishes_event(tenant, clock):
+    _, _, invoice = renewal_that_fails(tenant, clock)
+    types = [e.type for e in Event.query.order_by(Event.id)]
+    assert "invoice.payment_failed" in types
+    assert types.count("customer.subscription.updated") >= 1
 
 
 def test_missing_payment_method_is_a_failed_attempt(tenant):

@@ -7,6 +7,7 @@ from datetime import timedelta
 from ledgerline import clock
 from ledgerline.billing import discounts, invoice_builder, invoicing, periods, pricing, proration
 from ledgerline.errors import InvalidRequestError, InvalidStateTransition
+from ledgerline.events import bus
 from ledgerline.extensions import db
 from ledgerline.models import InvoiceItem, Subscription, SubscriptionItem
 
@@ -151,6 +152,7 @@ def create_subscription(
 
     if coupon is not None:
         discounts.create_discount(coupon, customer, subscription=subscription, start=now)
+    bus.publish("customer.subscription.created", subscription)
 
     if subscription.status == "trialing":
         return subscription
@@ -259,6 +261,7 @@ def update_subscription_items(subscription, items, proration_behavior="create_pr
     db.session.flush()
     db.session.expire(subscription, ["items"])
     created = [item for item in created if item is not None]
+    bus.publish("customer.subscription.updated", subscription)
 
     if proration_behavior == "always_invoice" and created:
         invoice = invoice_builder.create_draft(
@@ -280,6 +283,7 @@ def schedule_cancellation(subscription, cancel_at_period_end=True):
     if subscription.status == "canceled":
         raise InvalidStateTransition("Subscription is already canceled")
     subscription.cancel_at_period_end = cancel_at_period_end
+    bus.publish("customer.subscription.updated", subscription)
     return subscription
 
 
@@ -317,4 +321,5 @@ def cancel_subscription(subscription, prorate=False, invoice_now=False):
     subscription.status = "canceled"
     subscription.canceled_at = now
     subscription.ended_at = now
+    bus.publish("customer.subscription.deleted", subscription)
     return subscription

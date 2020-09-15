@@ -4,6 +4,7 @@ import logging
 from ledgerline import clock
 from ledgerline.billing import periods
 from ledgerline.billing.subscriptions import _cycle_invoice, finalize_and_collect
+from ledgerline.events import bus
 from ledgerline.extensions import db
 from ledgerline.models import InvoiceItem, Subscription
 from ledgerline.models.subscription import BILLABLE_STATUSES
@@ -41,6 +42,7 @@ def _end_subscription(subscription, now):
     subscription.status = "canceled"
     subscription.canceled_at = subscription.canceled_at or now
     subscription.ended_at = subscription.current_period_end
+    bus.publish("customer.subscription.deleted", subscription)
     return invoice
 
 
@@ -66,6 +68,7 @@ def _renew_once(subscription, now):
         metered_period=None if was_trialing else ended_period,
     )
     finalize_and_collect(invoice)
+    bus.publish("customer.subscription.updated", subscription)
     return invoice
 
 

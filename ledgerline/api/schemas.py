@@ -10,6 +10,7 @@ from ledgerline.billing.pricing import BILLING_SCHEMES, USAGE_TYPES
 from ledgerline.billing.subscriptions import COLLECTION_METHODS, PRORATION_BEHAVIORS
 from ledgerline.billing.usage import AGGREGATIONS
 from ledgerline.currency import CURRENCY_EXPONENTS
+from ledgerline.events.bus import EVENT_TYPES
 from ledgerline.models.coupon import COUPON_DURATIONS
 
 
@@ -206,3 +207,21 @@ class InvoicePaySchema(Schema):
 class UsageRecordSchema(Schema):
     quantity = fields.Int(required=True, validate=validate.Range(min=0))
     timestamp = fields.Int()
+
+
+def _event_type(value):
+    if value != "*" and value not in EVENT_TYPES:
+        raise ValidationError("Unknown event type '%s'" % value)
+
+
+class WebhookEndpointSchema(Schema):
+    url = fields.Url(required=True, require_tld=False)
+    enabled_events = fields.List(
+        fields.Str(validate=_event_type), required=True, validate=validate.Length(min=1)
+    )
+
+
+class WebhookEndpointUpdateSchema(Schema):
+    url = fields.Url(require_tld=False)
+    enabled_events = fields.List(fields.Str(validate=_event_type), validate=validate.Length(min=1))
+    active = fields.Bool()

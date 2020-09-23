@@ -10,7 +10,8 @@ worker for periodic jobs.
         +---------v----------+            +---------v----------+
         |  ledgerline.api    |            |  ledgerline.tasks  |
         |  auth, schemas,    |            |  billing cycle,    |
-        |  pagination        |            |  payment retries   |
+        |  pagination        |            |  payment retries,  |
+        |                    |            |  webhook dispatch  |
         +---------+----------+            +---------+----------+
                   |                                 |
                   +---------------+-----------------+
@@ -53,15 +54,17 @@ services never import from `api`.
 
 * **API views own the transaction.** A view calls services, then commits
   once. Services `flush()` but never `commit()`.
-* **Jobs commit per unit of work** (one subscription, one invoice) so that
-  one bad record cannot block the run.
+* **Jobs commit per unit of work** (one subscription, one invoice, one
+  webhook delivery) so that one bad record cannot block the run.
 * Error handlers roll the session back before rendering an error.
 
 ## Domain events and webhooks
 
 `events.bus.publish()` inserts an `Event` and one `WebhookDelivery` per
 subscribed endpoint inside the current transaction (transactional outbox,
-[ADR 0002](adr/0002-transactional-outbox.md)).
+[ADR 0002](adr/0002-transactional-outbox.md)). The dispatcher job sends
+pending deliveries, signs them with HMAC-SHA256 and retries with exponential
+backoff.
 
 ## Multi-tenancy
 

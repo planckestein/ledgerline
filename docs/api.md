@@ -44,4 +44,6 @@ lower-case ISO 4217 codes.
 | `POST /invoices`, `GET /invoices`, `GET /invoices/:id` | manual draft invoices, listing |
 | `POST /invoices/:id/finalize` \| `pay` \| `void` \| `mark_uncollectible` | invoice lifecycle |
 | `GET /invoices/:id/payment_attempts` | charge attempts |
+| `POST/GET /webhook_endpoints`, `GET/POST /webhook_endpoints/:id` | webhook endpoints |
+| `GET /events`, `GET /events/:id` | the event log |
 | `GET /ledger/trial_balance?currency=eur` | ledger trial balance |

@@ -51,3 +51,43 @@ class TestPagination:
         ids = create_customers(api, clock, 2)
         response = api.get("/v1/customers", starting_after=ids[0], ending_before=ids[1])
         assert response.status_code == 400
+
+
+class TestWebhookEndpoints:
+    def test_create_returns_secret_once(self, api):
+        response = api.post(
+            "/v1/webhook_endpoints",
+            json={
+                "url": "https://example.com/hooks",
+                "enabled_events": ["invoice.paid", "invoice.paid"],
+            },
+        )
+        assert response.status_code == 201
+        endpoint = response.get_json()
+        assert endpoint["secret"].startswith("whsec_")
+        assert endpoint["enabled_events"] == ["invoice.paid"]
+        fetched = api.get("/v1/webhook_endpoints/%s" % endpoint["id"]).get_json()
+        assert "secret" not in fetched
+
+    def test_unknown_event_type(self, api):
+        response = api.post(
+            "/v1/webhook_endpoints",
+            json={"url": "https://example.com/hooks", "enabled_events": ["invoice.exploded"]},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["error"]["param"].startswith("enabled_events")
+
+    def test_disable_endpoint(self, api):
+        endpoint = api.post(
+            "/v1/webhook_endpoints",
+            json={"url": "http://localhost:9000/x", "enabled_events": ["*"]},
+        ).get_json()
+        updated = api.post("/v1/webhook_endpoints/%s" % endpoint["id"], json={"active": False})
+        assert updated.get_json()["active"] is False
+
+    def test_events_are_listed(self, api):
+        customer = api.post("/v1/customers", json={}).get_json()
+        events = api.get("/v1/events", type="customer.created").get_json()["data"]
+        assert [e["data"]["object"]["id"] for e in events] == [customer["id"]]
+        event = api.get("/v1/events/%s" % events[0]["id"]).get_json()
+        assert event["type"] == "customer.created"

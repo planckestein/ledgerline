@@ -23,6 +23,10 @@ class BaseConfig:
     # Name of the payment gateway adapter registered in ledgerline.payments.gateway.
     LEDGERLINE_PAYMENT_GATEWAY = os.environ.get("LEDGERLINE_PAYMENT_GATEWAY", "fake")
 
+    LEDGERLINE_WEBHOOK_TIMEOUT = 10
+    LEDGERLINE_WEBHOOK_MAX_ATTEMPTS = 8
+    LEDGERLINE_WEBHOOK_SIGNATURE_TOLERANCE = 300
+
     LEDGERLINE_PAGE_SIZE_DEFAULT = 10
     LEDGERLINE_PAGE_SIZE_MAX = 100
 

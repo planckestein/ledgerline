@@ -19,6 +19,7 @@ def register_api(app):
         subscriptions,
         tax_rates,
         usage,
+        webhooks,
     )
 
     app.register_blueprint(api_bp)

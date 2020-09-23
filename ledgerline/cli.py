@@ -58,6 +58,13 @@ def billing_retry_payments():
     click.echo(json.dumps(retry_due_payments(), indent=2))
 
 
+@billing_cli.command("dispatch-webhooks")
+def billing_dispatch_webhooks():
+    from ledgerline.events.webhooks import dispatch_due
+
+    click.echo(json.dumps(dispatch_due(), indent=2))
+
+
 def register_cli(app):
     app.cli.add_command(tenants_cli)
     app.cli.add_command(billing_cli)

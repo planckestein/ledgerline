@@ -94,3 +94,23 @@ def other_api(app, other_tenant):
     secret = factories.api_key(other_tenant)
     _db.session.commit()
     return ApiClient(app.test_client(), secret)
+
+
+class FakeTransport:
+    """Records webhook POSTs; returns queued status codes (default 200)."""
+
+    def __init__(self, statuses=None):
+        self.statuses = list(statuses or [])
+        self.requests = []
+
+    def post(self, url, body, headers, timeout):
+        self.requests.append({"url": url, "body": body, "headers": headers})
+        status = self.statuses.pop(0) if self.statuses else 200
+        if isinstance(status, Exception):
+            raise status
+        return status
+
+
+@pytest.fixture
+def transport():
+    return FakeTransport()

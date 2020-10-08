@@ -13,6 +13,7 @@ def test_celery_tasks_run_eagerly(db, tenant, clock):
     assert result["invoices"] == 1
     assert Invoice.query.filter_by(subscription_id=sub_id).count() == 2
     assert jobs.retry_due_payments_task.delay().get()["attempted"] == 0
+    assert jobs.purge_idempotency_keys_task.delay().get() == {"deleted": 0}
 
 
 def test_beat_schedule_references_registered_tasks():

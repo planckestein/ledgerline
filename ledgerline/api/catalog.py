@@ -3,6 +3,7 @@ from flask import g, jsonify, request
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import bool_arg, get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import (
     PriceSchema,
@@ -16,6 +17,7 @@ from ledgerline.serializers import serialize_price, serialize_product
 
 
 @api_bp.route("/products", methods=["POST"])
+@idempotent
 def create_product():
     data = load(ProductSchema())
     product = Product(tenant_id=g.tenant.id, **data)
@@ -39,6 +41,7 @@ def get_product(product_id):
 
 
 @api_bp.route("/products/<product_id>", methods=["POST"])
+@idempotent
 def update_product(product_id):
     product = get_or_404(Product, product_id)
     for key, value in load(ProductUpdateSchema()).items():
@@ -48,6 +51,7 @@ def update_product(product_id):
 
 
 @api_bp.route("/prices", methods=["POST"])
+@idempotent
 def create_price():
     data = load(PriceSchema())
     product = get_or_404(Product, data["product"], param="product")
@@ -91,6 +95,7 @@ def get_price(price_id):
 
 
 @api_bp.route("/prices/<price_id>", methods=["POST"])
+@idempotent
 def update_price(price_id):
     price = get_or_404(Price, price_id)
     for key, value in load(PriceUpdateSchema()).items():

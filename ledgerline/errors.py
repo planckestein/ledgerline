@@ -42,6 +42,16 @@ class AuthenticationError(LedgerlineError):
     error_type = "authentication_error"
 
 
+class ConflictError(InvalidRequestError):
+    status_code = 409
+    default_code = "conflict"
+
+
+class IdempotencyError(LedgerlineError):
+    status_code = 422
+    error_type = "idempotency_error"
+
+
 class InvalidStateTransition(InvalidRequestError):
     status_code = 409
     default_code = "invalid_state_transition"

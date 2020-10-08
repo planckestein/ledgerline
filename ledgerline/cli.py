@@ -65,6 +65,13 @@ def billing_dispatch_webhooks():
     click.echo(json.dumps(dispatch_due(), indent=2))
 
 
+@billing_cli.command("purge-idempotency-keys")
+def billing_purge_idempotency_keys():
+    from ledgerline.api.idempotency import purge_expired
+
+    click.echo("deleted %d keys" % purge_expired())
+
+
 def register_cli(app):
     app.cli.add_command(tenants_cli)
     app.cli.add_command(billing_cli)

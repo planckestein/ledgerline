@@ -3,6 +3,7 @@ from flask import jsonify, request
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import (
     SubscriptionCancelSchema,
@@ -23,6 +24,7 @@ def _resolve_items(raw_items):
 
 
 @api_bp.route("/subscriptions", methods=["POST"])
+@idempotent
 def create_subscription():
     data = load(SubscriptionCreateSchema())
     customer = get_or_404(Customer, data["customer"], param="customer")
@@ -56,6 +58,7 @@ def get_subscription(subscription_id):
 
 
 @api_bp.route("/subscriptions/<subscription_id>", methods=["POST"])
+@idempotent
 def update_subscription(subscription_id):
     subscription = get_or_404(Subscription, subscription_id)
     data = load(SubscriptionUpdateSchema())
@@ -72,6 +75,7 @@ def update_subscription(subscription_id):
 
 
 @api_bp.route("/subscriptions/<subscription_id>/cancel", methods=["POST"])
+@idempotent
 def cancel_subscription(subscription_id):
     subscription = get_or_404(Subscription, subscription_id)
     data = load(SubscriptionCancelSchema())

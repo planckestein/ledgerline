@@ -29,8 +29,8 @@ migrations, Celery workers and a PostgreSQL database.
   balance endpoint.
 * **Webhooks** – transactional outbox, HMAC-SHA256 signatures, exponential
   backoff.
-* **API** – JSON REST API with API-key auth, cursor pagination and uniform
-  errors.
+* **API** – JSON REST API with API-key auth, idempotency keys, cursor
+  pagination and uniform errors.
 
 ## Technology
 
@@ -80,6 +80,7 @@ Background jobs (run by Celery beat, or by hand):
 flask billing run                    # renew subscriptions whose period ended
 flask billing retry-payments         # dunning retries
 flask billing dispatch-webhooks
+flask billing purge-idempotency-keys
 ```
 
 ## Tests
@@ -106,7 +107,7 @@ The suite is organised as `tests/unit` (pure functions), `tests/integration`
 
 ```
 ledgerline/
-  api/          Flask blueprint: auth, schemas, pagination, resources
+  api/          Flask blueprint: auth, schemas, idempotency, pagination, resources
   billing/      periods, pricing, proration, discounts, tax, invoices, subscriptions
   payments/     gateway adapters, collection, dunning
   ledger/       journal postings and reports

@@ -3,6 +3,7 @@ from flask import g, jsonify, request
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import WebhookEndpointSchema, WebhookEndpointUpdateSchema
 from ledgerline.events.webhooks import generate_secret
@@ -12,6 +13,7 @@ from ledgerline.serializers import serialize_event, serialize_webhook_endpoint
 
 
 @api_bp.route("/webhook_endpoints", methods=["POST"])
+@idempotent
 def create_webhook_endpoint():
     data = load(WebhookEndpointSchema())
     endpoint = WebhookEndpoint(
@@ -37,6 +39,7 @@ def get_webhook_endpoint(endpoint_id):
 
 
 @api_bp.route("/webhook_endpoints/<endpoint_id>", methods=["POST"])
+@idempotent
 def update_webhook_endpoint(endpoint_id):
     endpoint = get_or_404(WebhookEndpoint, endpoint_id)
     data = load(WebhookEndpointUpdateSchema())

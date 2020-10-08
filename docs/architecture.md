@@ -10,8 +10,8 @@ worker for periodic jobs.
         +---------v----------+            +---------v----------+
         |  ledgerline.api    |            |  ledgerline.tasks  |
         |  auth, schemas,    |            |  billing cycle,    |
-        |  pagination        |            |  payment retries,  |
-        |                    |            |  webhook dispatch  |
+        |  idempotency,      |            |  payment retries,  |
+        |  pagination        |            |  webhook dispatch  |
         +---------+----------+            +---------+----------+
                   |                                 |
                   +---------------+-----------------+
@@ -43,7 +43,7 @@ worker for periodic jobs.
 | `ledgerline.ledger` | double-entry postings and reports |
 | `ledgerline.events` | transactional outbox and signed webhook delivery |
 | `ledgerline.serializers` | public JSON representations (shared by API and events) |
-| `ledgerline.api` | Flask blueprint: authentication, validation, pagination, resources |
+| `ledgerline.api` | Flask blueprint: authentication, validation, idempotency, pagination, resources |
 | `ledgerline.tasks` | Celery app and periodic jobs |
 | `ledgerline.cli` | operator commands (`flask tenants ...`, `flask billing ...`) |
 

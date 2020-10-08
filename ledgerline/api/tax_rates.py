@@ -3,6 +3,7 @@ from flask import g, jsonify
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import TaxRateSchema, TaxRateUpdateSchema
 from ledgerline.extensions import db
@@ -12,6 +13,7 @@ from ledgerline.serializers import serialize_tax_rate
 
 
 @api_bp.route("/tax_rates", methods=["POST"])
+@idempotent
 def create_tax_rate():
     data = load(TaxRateSchema())
     rate = TaxRate(
@@ -38,6 +40,7 @@ def get_tax_rate(rate_id):
 
 
 @api_bp.route("/tax_rates/<rate_id>", methods=["POST"])
+@idempotent
 def update_tax_rate(rate_id):
     rate = get_or_404(TaxRate, rate_id)
     for key, value in load(TaxRateUpdateSchema()).items():

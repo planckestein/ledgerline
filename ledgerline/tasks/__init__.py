@@ -4,6 +4,7 @@ The worker is started with ``celery -A celery_worker.celery worker -B``; every
 task runs inside a Flask application context.
 """
 from celery import Celery
+from celery.schedules import crontab
 
 celery = Celery("ledgerline", include=["ledgerline.tasks.jobs"])
 
@@ -11,6 +12,10 @@ BEAT_SCHEDULE = {
     "billing-cycle": {"task": "ledgerline.run_billing_cycle", "schedule": 300.0},
     "payment-retries": {"task": "ledgerline.retry_due_payments", "schedule": 900.0},
     "webhook-dispatch": {"task": "ledgerline.dispatch_webhooks", "schedule": 15.0},
+    "idempotency-purge": {
+        "task": "ledgerline.purge_idempotency_keys",
+        "schedule": crontab(minute=17, hour="*/6"),
+    },
 }
 
 

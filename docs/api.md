@@ -18,7 +18,14 @@ lower-case ISO 4217 codes.
 | 401 | `authentication_error` | missing, invalid or revoked key |
 | 402 | `card_error` | the charge was declined (`code` from the gateway) |
 | 404 | `invalid_request_error` | object does not exist for this tenant |
-| 409 | `invalid_request_error` | illegal state transition |
+| 409 | `invalid_request_error` | illegal state transition, idempotency key in use |
+| 422 | `idempotency_error` | key reused with different parameters |
+
+## Idempotency
+
+Send `Idempotency-Key: <unique string>` on any `POST`. Retries with the same
+key and parameters return the stored response with `Idempotent-Replayed: true`
+for 24 hours. See docs/billing-model.md §8.
 
 ## Pagination
 

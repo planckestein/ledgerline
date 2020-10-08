@@ -149,3 +149,7 @@ order is total: objects created in the same instant (bulk imports, frozen
 clocks) are still returned exactly once while paging with `starting_after` /
 `ending_before`. `has_more` is `true` if and only if at least one more object
 exists beyond the returned page in the direction of travel.
+
+**Idempotency.** `Idempotency-Key` values are chosen by API clients and are
+therefore scoped **per tenant**: two tenants using the same key never see
+each other's requests or responses.

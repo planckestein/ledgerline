@@ -3,6 +3,7 @@ from flask import g, jsonify, request
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import bool_arg, get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import InvoiceCreateSchema, InvoiceItemSchema, InvoicePaySchema
 from ledgerline.billing import invoicing
@@ -17,6 +18,7 @@ from ledgerline.serializers import (
 
 
 @api_bp.route("/invoiceitems", methods=["POST"])
+@idempotent
 def create_invoice_item():
     data = load(InvoiceItemSchema())
     customer = get_or_404(Customer, data["customer"], param="customer")
@@ -60,6 +62,7 @@ def list_invoice_items():
 
 
 @api_bp.route("/invoices", methods=["POST"])
+@idempotent
 def create_invoice():
     data = load(InvoiceCreateSchema())
     customer = get_or_404(Customer, data["customer"], param="customer")
@@ -92,6 +95,7 @@ def get_invoice(invoice_id):
 
 
 @api_bp.route("/invoices/<invoice_id>/finalize", methods=["POST"])
+@idempotent
 def finalize_invoice(invoice_id):
     invoice = get_or_404(Invoice, invoice_id)
     invoicing.finalize_invoice(invoice)
@@ -100,6 +104,7 @@ def finalize_invoice(invoice_id):
 
 
 @api_bp.route("/invoices/<invoice_id>/pay", methods=["POST"])
+@idempotent
 def pay_invoice(invoice_id):
     invoice = get_or_404(Invoice, invoice_id)
     data = load(InvoicePaySchema())
@@ -111,6 +116,7 @@ def pay_invoice(invoice_id):
 
 
 @api_bp.route("/invoices/<invoice_id>/void", methods=["POST"])
+@idempotent
 def void_invoice(invoice_id):
     invoice = get_or_404(Invoice, invoice_id)
     invoicing.void_invoice(invoice)
@@ -119,6 +125,7 @@ def void_invoice(invoice_id):
 
 
 @api_bp.route("/invoices/<invoice_id>/mark_uncollectible", methods=["POST"])
+@idempotent
 def mark_uncollectible(invoice_id):
     invoice = get_or_404(Invoice, invoice_id)
     invoicing.mark_uncollectible(invoice)

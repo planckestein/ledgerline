@@ -3,6 +3,7 @@ from flask import g, jsonify, request
 
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
+from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
 from ledgerline.api.schemas import CustomerDiscountSchema, CustomerSchema, PaymentMethodSchema
 from ledgerline.billing import discounts
@@ -31,6 +32,7 @@ def _apply_fields(customer, data):
 
 
 @api_bp.route("/customers", methods=["POST"])
+@idempotent
 def create_customer():
     data = load(CustomerSchema())
     customer = Customer(tenant_id=g.tenant.id, tax_exempt=False)
@@ -55,6 +57,7 @@ def get_customer(customer_id):
 
 
 @api_bp.route("/customers/<customer_id>", methods=["POST"])
+@idempotent
 def update_customer(customer_id):
     customer = get_or_404(Customer, customer_id)
     data = load(CustomerSchema(partial=True))
@@ -65,6 +68,7 @@ def update_customer(customer_id):
 
 
 @api_bp.route("/customers/<customer_id>/payment_methods", methods=["POST"])
+@idempotent
 def attach_payment_method(customer_id):
     customer = get_or_404(Customer, customer_id)
     data = load(PaymentMethodSchema())
@@ -85,6 +89,7 @@ def list_payment_methods(customer_id):
 
 
 @api_bp.route("/customers/<customer_id>/discount", methods=["POST"])
+@idempotent
 def apply_customer_discount(customer_id):
     customer = get_or_404(Customer, customer_id)
     data = load(CustomerDiscountSchema())

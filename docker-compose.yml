@@ -14,7 +14,7 @@ x-app: &app
 
 services:
   postgres:
-    image: postgres:12.3
+    image: postgres:12.4
     environment:
       POSTGRES_USER: ledgerline
       POSTGRES_PASSWORD: ledgerline
@@ -25,7 +25,7 @@ services:
       - "5432:5432"
 
   redis:
-    image: redis:6.0.5
+    image: redis:6.0.9
     ports:
       - "6379:6379"
 

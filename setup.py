@@ -17,9 +17,9 @@ setup(
         "flask~=1.1",
         "flask-migrate~=2.5",
         "flask-sqlalchemy~=2.4",
-        "marshmallow~=3.6",
+        "marshmallow~=3.8",
         "psycopg2-binary~=2.8",
-        "requests~=2.23",
+        "requests~=2.24",
         "sqlalchemy~=1.3",
     ],
 )

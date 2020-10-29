@@ -38,12 +38,12 @@ migrations, Celery workers and a PostgreSQL database.
 |---|---|
 | Python | 3.8 |
 | Flask / Werkzeug | 1.1.2 / 1.0.1 |
-| SQLAlchemy / Flask-SQLAlchemy | 1.3.17 / 2.4.3 |
-| Alembic / Flask-Migrate | 1.4.2 / 2.5.3 |
-| marshmallow | 3.6.1 |
-| Celery / Redis client | 4.4.5 / 3.5.3 |
-| PostgreSQL (psycopg2) | 12 (2.8.5) |
-| pytest / black / flake8 / isort | 5.4.3 / 19.10b0 / 3.8.3 / 4.3.21 |
+| SQLAlchemy / Flask-SQLAlchemy | 1.3.20 / 2.4.4 |
+| Alembic / Flask-Migrate | 1.4.3 / 2.5.3 |
+| marshmallow | 3.8.0 |
+| Celery / Redis client | 4.4.7 / 3.5.3 |
+| PostgreSQL (psycopg2) | 12 (2.8.6) |
+| pytest / black / flake8 / isort | 6.1.1 / 20.8b1 / 3.8.4 / 5.6.4 |
 
 Every dependency is pinned in `requirements.txt` / `requirements-dev.txt`.
 

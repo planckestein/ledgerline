@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The project follows
 semantic versioning.
 
+## 1.3.0
+
+### Added
+- Idempotency keys for every `POST` endpoint (`Idempotency-Key` header).
+- Transactional outbox, webhook endpoints and signed webhook delivery.
+- Double-entry ledger and `GET /v1/ledger/trial_balance`.
+
 ## 1.2.0
 
 ### Added

@@ -112,6 +112,38 @@ class TestCustomers:
         assert bad.status_code == 400
         assert bad.get_json()["error"]["code"] == "invalid_token"
 
+    def test_bulk_import(self, api):
+        response = api.post(
+            "/v1/customers/import",
+            json={
+                "customers": [
+                    {"email": "a@example.com", "address": {"country": "fr"}},
+                    {"email": "b@example.com", "vat_id": "DE811907980"},
+                    {"name": "No email"},
+                ]
+            },
+        )
+        assert response.status_code == 201
+        imported = response.get_json()["data"]
+        assert [c["email"] for c in imported] == ["a@example.com", "b@example.com", None]
+        assert imported[0]["address"]["country"] == "FR"
+        assert len({c["created"] for c in imported}) == 1
+        assert len(api.get("/v1/events", type="customer.created").get_json()["data"]) == 3
+
+    def test_bulk_import_is_all_or_nothing(self, api):
+        response = api.post(
+            "/v1/customers/import",
+            json={"customers": [{"email": "ok@example.com"}, {"email": "broken"}]},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["error"]["param"] == "customers.1.email"
+        assert api.get("/v1/customers").get_json()["data"] == []
+
+    def test_bulk_import_limits(self, api):
+        assert api.post("/v1/customers/import", json={"customers": []}).status_code == 400
+        too_many = {"customers": [{}] * 501}
+        assert api.post("/v1/customers/import", json=too_many).status_code == 400
+
     def test_unknown_route_is_json(self, api):
         response = api.get("/v1/nope")
         assert response.status_code == 404

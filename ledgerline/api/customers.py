@@ -1,11 +1,17 @@
 """/v1/customers"""
 from flask import g, jsonify, request
 
+from ledgerline import clock
 from ledgerline.api import api_bp
 from ledgerline.api.helpers import get_or_404, load, scoped
 from ledgerline.api.idempotency import idempotent
 from ledgerline.api.pagination import paginate
-from ledgerline.api.schemas import CustomerDiscountSchema, CustomerSchema, PaymentMethodSchema
+from ledgerline.api.schemas import (
+    CustomerDiscountSchema,
+    CustomerImportSchema,
+    CustomerSchema,
+    PaymentMethodSchema,
+)
 from ledgerline.billing import discounts
 from ledgerline.events import bus
 from ledgerline.extensions import db
@@ -41,6 +47,40 @@ def create_customer():
     bus.publish("customer.created", customer)
     db.session.commit()
     return jsonify(serialize_customer(customer)), 201
+
+
+@api_bp.route("/customers/import", methods=["POST"])
+@idempotent
+def import_customers():
+    """Create up to 500 customers in one transaction (used for merchant onboarding).
+
+    Every customer of a batch carries the same ``created_at`` so that an import
+    can be audited (and rolled back by hand) as one unit.
+    """
+    data = load(CustomerImportSchema())
+    imported_at = clock.utcnow()
+    customers = []
+    for fields in data["customers"]:
+        customer = Customer(
+            tenant_id=g.tenant.id, tax_exempt=False, created_at=imported_at, updated_at=imported_at
+        )
+        _apply_fields(customer, fields)
+        db.session.add(customer)
+        customers.append(customer)
+    for customer in customers:
+        bus.publish("customer.created", customer)
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "object": "list",
+                "url": request.path,
+                "has_more": False,
+                "data": [serialize_customer(customer) for customer in customers],
+            }
+        ),
+        201,
+    )
 
 
 @api_bp.route("/customers", methods=["GET"])

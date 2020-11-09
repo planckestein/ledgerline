@@ -38,6 +38,12 @@ class CustomerSchema(Schema):
     metadata = fields.Dict(keys=fields.Str(), values=fields.Str())
 
 
+class CustomerImportSchema(Schema):
+    customers = fields.List(
+        fields.Nested(CustomerSchema), required=True, validate=validate.Length(min=1, max=500)
+    )
+
+
 class CustomerDiscountSchema(Schema):
     coupon = fields.Str(required=True)
 

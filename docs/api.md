@@ -37,6 +37,7 @@ for 24 hours. See docs/billing-model.md §8.
 | method & path | description |
 |---|---|
 | `POST /customers`, `GET /customers`, `GET/POST /customers/:id` | customers (`email`, `name`, `address`, `vat_id`, `tax_exempt`, `metadata`) |
+| `POST /customers/import` | create up to 500 customers at once (`{"customers": [...]}`) |
 | `POST/GET /customers/:id/payment_methods` | attach a card token (`tok_visa`, ...) |
 | `POST /customers/:id/discount` | apply a coupon to every invoice of the customer |
 | `POST/GET /products`, `GET/POST /products/:id` | products |

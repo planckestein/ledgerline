@@ -3,6 +3,11 @@
 All notable changes to this project are documented here. The project follows
 semantic versioning.
 
+## Unreleased
+
+### Added
+- `POST /v1/customers/import` creates up to 500 customers in one request.
+
 ## 1.3.0
 
 ### Added

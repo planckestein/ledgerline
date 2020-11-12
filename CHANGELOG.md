@@ -7,6 +7,7 @@ semantic versioning.
 
 ### Added
 - `POST /v1/customers/import` creates up to 500 customers in one request.
+- `flask ledger trial-balance <tenant>` prints the trial balance for finance.
 
 ## 1.3.0
 

@@ -11,6 +11,7 @@ from ledgerline.models import ApiKey, Tenant
 
 tenants_cli = AppGroup("tenants", help="Manage tenants and API keys.")
 billing_cli = AppGroup("billing", help="Run billing jobs by hand.")
+ledger_cli = AppGroup("ledger", help="Inspect the double-entry ledger.")
 
 
 @tenants_cli.command("create")
@@ -72,6 +73,27 @@ def billing_purge_idempotency_keys():
     click.echo("deleted %d keys" % purge_expired())
 
 
+@ledger_cli.command("trial-balance")
+@click.argument("tenant_id")
+@click.option("--currency", default=None, help="Defaults to the tenant's default currency.")
+def ledger_trial_balance(tenant_id, currency):
+    """Print the trial balance of a tenant; exits with status 1 if it does not balance."""
+    from ledgerline.ledger.reports import trial_balance
+
+    tenant = Tenant.query.filter_by(public_id=tenant_id).first()
+    if tenant is None:
+        raise click.ClickException("No such tenant %s" % tenant_id)
+    report = trial_balance(tenant.id, normalize_currency(currency or tenant.default_currency))
+    for row in report["accounts"]:
+        click.echo(
+            "%-28s %12d %12d %12d" % (row["account"], row["debits"], row["credits"], row["balance"])
+        )
+    click.echo("%-28s %12d %12d" % ("total", report["total_debits"], report["total_credits"]))
+    if not report["balanced"]:
+        raise click.ClickException("Ledger does not balance")
+
+
 def register_cli(app):
     app.cli.add_command(tenants_cli)
     app.cli.add_command(billing_cli)
+    app.cli.add_command(ledger_cli)

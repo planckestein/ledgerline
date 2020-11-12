@@ -35,6 +35,18 @@ def test_cli_creates_tenant_with_api_key(app, db):
     assert ApiKey.query.filter_by(key_hash=ApiKey.hash_secret(secret)).count() == 1
 
 
+def test_cli_trial_balance(app, db, tenant):
+    factories.subscribe(factories.customer(tenant), factories.price(tenant, unit_amount=1000))
+    db.session.commit()
+    result = app.test_cli_runner().invoke(args=["ledger", "trial-balance", tenant.public_id])
+    assert result.exit_code == 0, result.output
+    assert "1000_cash" in result.output
+    assert result.output.strip().splitlines()[-1].split() == ["total", "2000", "2000"]
+
+    missing = app.test_cli_runner().invoke(args=["ledger", "trial-balance", "acct_nope"])
+    assert missing.exit_code != 0
+
+
 def test_cli_billing_run(app, db, tenant, clock):
     factories.subscribe(factories.customer(tenant), factories.price(tenant))
     db.session.commit()

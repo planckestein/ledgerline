@@ -37,7 +37,9 @@ def request_fingerprint():
 
 
 def find_key(tenant_id, key):
-    return IdempotencyKey.query.filter_by(tenant_id=tenant_id, key=key).first()
+    # Look the key up through its fixed-width hash, which is backed by a
+    # compact unique index (see migration f3b9d2e6a399).
+    return IdempotencyKey.query.filter_by(key_hash=IdempotencyKey.hash_key(key)).first()
 
 
 def _expired(record, now):
@@ -96,6 +98,7 @@ def idempotent(view):
         record = IdempotencyKey(
             tenant_id=g.tenant.id,
             key=key,
+            key_hash=IdempotencyKey.hash_key(key),
             request_method=request.method,
             request_path=request.path,
             request_fingerprint=fingerprint,

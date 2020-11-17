@@ -60,6 +60,7 @@ def test_in_flight_keys_conflict(db, api, tenant):
         IdempotencyKey(
             tenant_id=tenant.id,
             key="busy",
+            key_hash=IdempotencyKey.hash_key("busy"),
             request_method="POST",
             request_path="/v1/customers",
             request_fingerprint=_fingerprint_of(api, {}),

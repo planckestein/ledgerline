@@ -3,11 +3,15 @@
 All notable changes to this project are documented here. The project follows
 semantic versioning.
 
-## Unreleased
+## 1.4.0
 
 ### Added
 - `POST /v1/customers/import` creates up to 500 customers in one request.
 - `flask ledger trial-balance <tenant>` prints the trial balance for finance.
+
+### Changed
+- Idempotency keys are looked up through a SHA-256 hash backed by a compact
+  unique index (migration `f3b9d2e6a399`).
 
 ## 1.3.0
 

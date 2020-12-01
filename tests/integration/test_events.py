@@ -89,6 +89,24 @@ def test_failed_delivery_is_retried_with_backoff(db, tenant, transport, clock):
     assert len(transport.requests) == 3
 
 
+def test_connection_errors_are_retried(db, tenant, transport, clock):
+    import requests
+
+    factories.webhook_endpoint(tenant, events=["invoice.paid"], url="https://down.example.com")
+    healthy = factories.webhook_endpoint(tenant, events=["invoice.paid"])
+    factories.subscribe(factories.customer(tenant), factories.price(tenant))
+    db.session.commit()
+    transport.statuses = [requests.ConnectionError("connection refused"), 200]
+
+    summary = webhooks.dispatch_due(transport=transport)
+    assert summary == {"attempted": 2, "succeeded": 1, "failed": 1}
+    failed = WebhookDelivery.query.filter(WebhookDelivery.endpoint_id != healthy.id).one()
+    assert failed.status == "pending"
+    assert failed.response_status is None
+    assert failed.last_error == "ConnectionError: connection refused"
+    assert failed.next_attempt_at == clock.now() + timedelta(minutes=1)
+
+
 def test_delivery_gives_up_after_max_attempts(app, db, tenant, transport, clock):
     app.config["LEDGERLINE_WEBHOOK_MAX_ATTEMPTS"] = 2
     factories.webhook_endpoint(tenant, events=["invoice.paid"])

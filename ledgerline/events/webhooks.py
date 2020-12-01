@@ -94,9 +94,17 @@ def deliver(delivery, transport, now):
     }
     delivery.attempt_count += 1
     delivery.last_attempt_at = now
-    status = transport.post(
-        delivery.endpoint.url, body, headers, current_app.config["LEDGERLINE_WEBHOOK_TIMEOUT"]
-    )
+    try:
+        status = transport.post(
+            delivery.endpoint.url, body, headers, current_app.config["LEDGERLINE_WEBHOOK_TIMEOUT"]
+        )
+    except requests.RequestException as exc:
+        # Unreachable endpoints (DNS failures, refused connections, timeouts)
+        # are retried like any other failed delivery.
+        log.info("Webhook delivery %s failed: %s", delivery.id, exc)
+        delivery.response_status = None
+        _schedule_retry(delivery, now, "%s: %s" % (type(exc).__name__, exc))
+        return False
     delivery.response_status = status
     if 200 <= status < 300:
         delivery.status = "succeeded"

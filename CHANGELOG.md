@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. The project follows
 semantic versioning.
 
+## 1.4.1
+
+### Fixed
+- A webhook endpoint that refused connections or timed out aborted the whole
+  dispatcher run; such deliveries are now retried with backoff.
+
 ## 1.4.0
 
 ### Added

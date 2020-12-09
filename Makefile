@@ -6,13 +6,13 @@ install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
 
 lint:
-	$(PYTHON) -m flake8 ledgerline tests migrations *.py
-	$(PYTHON) -m black --check ledgerline tests migrations *.py
-	$(PYTHON) -m isort --check-only ledgerline tests migrations *.py
+	$(PYTHON) -m flake8 ledgerline tests migrations scripts *.py
+	$(PYTHON) -m black --check ledgerline tests migrations scripts *.py
+	$(PYTHON) -m isort --check-only ledgerline tests migrations scripts *.py
 
 format:
-	$(PYTHON) -m isort ledgerline tests migrations *.py
-	$(PYTHON) -m black ledgerline tests migrations *.py
+	$(PYTHON) -m isort ledgerline tests migrations scripts *.py
+	$(PYTHON) -m black ledgerline tests migrations scripts *.py
 
 test:
 	$(PYTHON) -m pytest tests

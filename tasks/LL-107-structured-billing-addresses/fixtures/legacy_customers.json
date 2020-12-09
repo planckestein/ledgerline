@@ -1,0 +1,328 @@
+[
+  {
+    "id": 1,
+    "billing_address": "{\"street\": \"Unter den Linden 1\", \"zip\": \"10117\", \"city\": \"Berlin\", \"country\": \"Germany\"}",
+    "vat_id": "DE 811.907.980",
+    "expected_address": {
+      "line1": "Unter den Linden 1",
+      "line2": null,
+      "city": "Berlin",
+      "state": null,
+      "postal_code": "10117",
+      "country": "DE"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "DE811907980"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "billing_address": "{\"line1\": \"1 Main St\", \"line2\": \"Suite 5\", \"city\": \"Springfield\", \"state\": \"IL\", \"postal_code\": \"62701\", \"country\": \"us\"}",
+    "vat_id": null,
+    "expected_address": {
+      "line1": "1 Main St",
+      "line2": "Suite 5",
+      "city": "Springfield",
+      "state": "IL",
+      "postal_code": "62701",
+      "country": "US"
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 3,
+    "billing_address": "Hauptstr. 5, 10115 Berlin, DE",
+    "vat_id": "de811907980",
+    "expected_address": {
+      "line1": "Hauptstr. 5",
+      "line2": null,
+      "city": "Berlin",
+      "state": null,
+      "postal_code": "10115",
+      "country": "DE"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "DE811907980"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "billing_address": "\"Rue de Rivoli 10, 75001 Paris, France\"",
+    "vat_id": "FR 40 303 265 045",
+    "expected_address": {
+      "line1": "Rue de Rivoli 10",
+      "line2": null,
+      "city": "Paris",
+      "state": null,
+      "postal_code": "75001",
+      "country": "FR"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "FR40303265045"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "billing_address": "Keizersgracht 1, 2nd floor, 1015 CJ Amsterdam, Netherlands",
+    "vat_id": "NL-8519.29.193.B01",
+    "expected_address": {
+      "line1": "Keizersgracht 1",
+      "line2": "2nd floor",
+      "city": "CJ Amsterdam",
+      "state": null,
+      "postal_code": "1015",
+      "country": "NL"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "NL851929193B01"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "billing_address": "{\"line1\": \"Ermou 2\", \"city\": \"Athens\", \"country\": \"GR\"}",
+    "vat_id": "EL094259216",
+    "expected_address": {
+      "line1": "Ermou 2",
+      "line2": null,
+      "city": "Athens",
+      "state": null,
+      "postal_code": null,
+      "country": "GR"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "EL094259216"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "billing_address": "{\"line1\": \"10 Downing St\", \"city\": \"London\", \"postal_code\": \"SW1A 2AA\", \"country\": \"UK\"}",
+    "vat_id": "GB 980 7806 84",
+    "expected_address": {
+      "line1": "10 Downing St",
+      "line2": null,
+      "city": "London",
+      "state": null,
+      "postal_code": "SW1A 2AA",
+      "country": "GB"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "gb_vat",
+        "value": "GB980780684"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "billing_address": "{\"country_code\": \"ch\", \"city\": \"Zürich\"}",
+    "vat_id": "CHE-123.456.789 MWST",
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": "Zürich",
+      "state": null,
+      "postal_code": null,
+      "country": "CH"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "ch_vat",
+        "value": "CHE123456789MWST"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "billing_address": "",
+    "vat_id": "",
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 10,
+    "billing_address": "null",
+    "vat_id": "   ",
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 11,
+    "billing_address": null,
+    "vat_id": null,
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 12,
+    "billing_address": "{not json",
+    "vat_id": null,
+    "expected_address": {
+      "line1": "{not json",
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 13,
+    "billing_address": "[1, 2]",
+    "vat_id": "  -.  ",
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 14,
+    "billing_address": "{\"street\": \"  \", \"region\": \"CA\", \"country\": \"United States\"}",
+    "vat_id": null,
+    "expected_address": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": "CA",
+      "postal_code": null,
+      "country": "US"
+    },
+    "expected_tax_ids": []
+  },
+  {
+    "id": 15,
+    "billing_address": "{\"line1\": \"1-1 Chiyoda\", \"city\": \"Tokyo\", \"postal_code\": \"100-0001\", \"country\": \"Japan\"}",
+    "vat_id": "T1234567890123",
+    "expected_address": {
+      "line1": "1-1 Chiyoda",
+      "line2": null,
+      "city": "Tokyo",
+      "state": null,
+      "postal_code": "100-0001",
+      "country": "JP"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "unknown",
+        "value": "T1234567890123"
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "billing_address": "Somewhere 1, Springfield",
+    "vat_id": "xx",
+    "expected_address": {
+      "line1": "Somewhere 1",
+      "line2": null,
+      "city": "Springfield",
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": [
+      {
+        "type": "unknown",
+        "value": "XX"
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "billing_address": "{\"line1\": \"İstiklal Cd. 1\", \"city\": \"İstanbul\", \"country\": \"Türkiye\"}",
+    "vat_id": "TR1234567890",
+    "expected_address": {
+      "line1": "İstiklal Cd. 1",
+      "line2": null,
+      "city": "İstanbul",
+      "state": null,
+      "postal_code": null,
+      "country": null
+    },
+    "expected_tax_ids": [
+      {
+        "type": "unknown",
+        "value": "TR1234567890"
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "billing_address": "  Mariahilfer Str. 1 ,1060 Wien , AT  ",
+    "vat_id": "ATU 1234 5678",
+    "expected_address": {
+      "line1": "Mariahilfer Str. 1",
+      "line2": null,
+      "city": "Wien",
+      "state": null,
+      "postal_code": "1060",
+      "country": "AT"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "ATU12345678"
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "billing_address": "{\"line1\": \"Via Roma 1\", \"postal_code\": 100, \"country\": \"it\"}",
+    "vat_id": "IT12345678901",
+    "expected_address": {
+      "line1": "Via Roma 1",
+      "line2": null,
+      "city": null,
+      "state": null,
+      "postal_code": "100",
+      "country": "IT"
+    },
+    "expected_tax_ids": [
+      {
+        "type": "eu_vat",
+        "value": "IT12345678901"
+      }
+    ]
+  }
+]

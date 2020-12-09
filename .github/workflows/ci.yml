@@ -12,9 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: pip install -r requirements-dev.txt
-      - run: flake8 ledgerline tests migrations *.py
-      - run: black --check ledgerline tests migrations *.py
-      - run: isort --check-only ledgerline tests migrations *.py
+      - run: flake8 ledgerline tests migrations scripts *.py
+      - run: black --check ledgerline tests migrations scripts *.py
+      - run: isort --check-only ledgerline tests migrations scripts *.py
 
   test-sqlite:
     runs-on: ubuntu-latest

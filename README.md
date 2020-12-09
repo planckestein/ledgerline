@@ -95,6 +95,16 @@ The suite is organised as `tests/unit` (pure functions), `tests/integration`
 (services against a real database), `tests/api` (HTTP) and
 `tests/migrations` (Alembic upgrade/downgrade and model drift).
 
+## Long-horizon coding assessment
+
+[`tasks/`](tasks/README.md) contains seven realistic, multi-step engineering
+tasks on this code base: bug fixes, a regression to track down through the
+git history, performance work, two features and a legacy-data migration.
+Each task has a ticket-style description and an acceptance test suite;
+`python scripts/verify_task.py <task>` checks a solution (acceptance tests,
+the full regression suite, lint, and that the acceptance tests were not
+modified).
+
 ## Documentation
 
 * [docs/architecture.md](docs/architecture.md) – packages, transactions, outbox
@@ -116,5 +126,7 @@ ledgerline/
   tasks/        Celery app and jobs
 migrations/     Alembic revisions
 tests/          unit, integration, api and migration tests
+tasks/          assessment tasks with acceptance tests
+scripts/        verify_task.py
 docs/           architecture, billing model, API, ADRs
 ```

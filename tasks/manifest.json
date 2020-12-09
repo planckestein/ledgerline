@@ -1,0 +1,10 @@
+{
+  "tasks/LL-101-billing-anchor-drift/tests/test_ll101_acceptance.py": "c5afe9abfdb61c808cf9e05b64bbc98a0517bb45ecd2a782b56c2164e41266c1",
+  "tasks/LL-102-discount-tax-rounding/tests/test_ll102_acceptance.py": "8e0271b4906898beaeabe489aa95b608d382f18a05cc70e45003c61faa43743a",
+  "tasks/LL-103-idempotency-tenant-leak/tests/test_ll103_acceptance.py": "c858beb15ebefae1bfc54b7efadeb1fb99ab6a517c0405defac1759bf7c437f0",
+  "tasks/LL-104-pagination-and-n-plus-one/tests/test_ll104_acceptance.py": "fcf26b8f7d47ad041e1ce5e210224ccc743e558184fe56c687531b136f3a2cb6",
+  "tasks/LL-105-tiered-pricing/tests/test_ll105_acceptance.py": "ef430dbe434ea0b4f602059b27b9c48b4a603f6cc51c74276e971e90ed2fb3bb",
+  "tasks/LL-106-customer-credit-balance/tests/test_ll106_acceptance.py": "0222f5db807e1060098e904b67ab62eb96341bcb0f6c023258057349e163a274",
+  "tasks/LL-107-structured-billing-addresses/fixtures/legacy_customers.json": "13095fd1b0a9b4ab06bb8ed6726f1aaecd2673696927ccb2fff83c7304f008ca",
+  "tasks/LL-107-structured-billing-addresses/tests/test_ll107_acceptance.py": "5eae0112d4c7660b985a75b2dd255b17b7094b3ac6fcb3d5e360bf622783e934"
+}

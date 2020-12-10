@@ -29,6 +29,9 @@ def app():
         yield app
         _db.session.remove()
         _db.drop_all()
+        # Every test builds its own app (and engine); close its pooled
+        # connections or PostgreSQL runs out of client slots.
+        _db.engine.dispose()
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install lint format test test-postgres coverage migrate run worker
+.PHONY: install lint format test test-postgres coverage compat migrate run worker
 
 install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
@@ -19,6 +19,9 @@ test:
 
 test-postgres:
 	TEST_DATABASE_URL=postgresql://ledgerline:ledgerline@localhost:5432/ledgerline_test $(PYTHON) -m pytest tests
+
+compat:
+	$(PYTHON) scripts/check_2020_compat.py --pypi
 
 coverage:
 	$(PYTHON) -m pytest --cov=ledgerline --cov-report=term-missing tests

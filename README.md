@@ -45,7 +45,11 @@ migrations, Celery workers and a PostgreSQL database.
 | PostgreSQL (psycopg2) | 12 (2.8.6) |
 | pytest / black / flake8 / isort | 6.1.1 / 20.8b1 / 3.8.4 / 5.6.4 |
 
-Every dependency is pinned in `requirements.txt` / `requirements-dev.txt`.
+Every dependency is pinned in `requirements.txt` / `requirements-dev.txt`, and
+every pinned release, container image and CI action dates from 2020 or earlier.
+[docs/2020-compatibility.md](docs/2020-compatibility.md) lists the release date
+of each one; `make compat` (`scripts/check_2020_compat.py`) enforces the
+constraint in CI.
 
 ## Getting started
 
@@ -107,6 +111,7 @@ modified).
 
 ## Documentation
 
+* [docs/2020-compatibility.md](docs/2020-compatibility.md) – toolchain release dates and enforcement
 * [docs/architecture.md](docs/architecture.md) – packages, transactions, outbox
 * [docs/billing-model.md](docs/billing-model.md) – **the billing specification**
 * [docs/api.md](docs/api.md) – API reference

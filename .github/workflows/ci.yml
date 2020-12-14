@@ -6,6 +6,15 @@ on:
   pull_request:
 
 jobs:
+  compat-2020:
+    runs-on: ubuntu-latest
+    container: python:3.8.6-slim-buster
+    steps:
+      - uses: actions/checkout@v2
+      # Standard library only: runs before any dependency is installed and
+      # verifies the PyPI release date of every pinned package.
+      - run: python scripts/check_2020_compat.py --pypi
+
   lint:
     runs-on: ubuntu-latest
     container: python:3.8.6-slim-buster
